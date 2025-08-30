@@ -3,48 +3,92 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Analizador de Poker – Web</title>
+  <title>Poker Juanito – Analizador</title>
   <style>
     /* ===== Mesa de póker (tema) + diseño responsivo ===== */
     :root{
-      --cardW: clamp(56px, 9.5vw, 96px);
-      --radius: clamp(28px, 5vw, 48px);
+      /* Escalado fluido */
+      --cardW: clamp(56px, 9vw, 100px);
+      --radius: clamp(28px, 5vw, 52px);
       --pad: clamp(14px, 3.2vw, 26px);
+
+      /* Colores */
       --felt-1:#1f7a4a;  --felt-2:#0f5a37;  --felt-3:#063b25;
-      --wood-1:#7b4b2a;  --wood-2:#5c361d;  --wood-3:#3d2414;
+      --wood-1:#875431;  --wood-2:#6a3f23;  --wood-3:#51311a;  --wood-4:#3b2414;
       --ink:#ffffff;     --ink-dim:#e8f3ed; --line:#cfe9df;
+      --gold:#eacb7b;
     }
+
+    /* Fondo madera de tablones */
     body{
       margin: 0; font-family: system-ui, Arial, sans-serif; color: var(--ink);
-      background: radial-gradient(1200px 700px at 50% -10%, #0a3a28 0%, #042218 60%, #031912 100%);
+      background:
+        repeating-linear-gradient( 90deg,
+          #784d2c 0px, #7f5230 60px, #774a28 60px, #6d4324 120px ),
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.18));
     }
-    .page{ padding: clamp(8px, 2.5vw, 20px); }
+
+    .page{ padding: clamp(10px,2.6vw,22px); }
+
+    /* Contenedor con forma de mesa */
     .table{
       max-width: 1100px; margin: 0 auto; padding: var(--pad);
-      border-radius: calc(var(--radius) + 16px); position: relative;
+      border-radius: calc(var(--radius) + 18px); position: relative;
       background:
-        radial-gradient(1200px 700px at 50% 20%, rgba(255,255,255,.10), rgba(0,0,0,.18) 70%) ,
-        radial-gradient(600px 400px at 30% 30%, rgba(255,255,255,.06), transparent 70%),
+        radial-gradient(1200px 700px at 50% 20%, rgba(255,255,255,.12), rgba(0,0,0,.18) 70%) ,
+        radial-gradient(600px 400px at 30% 30%, rgba(255,255,255,.05), transparent 70%),
         radial-gradient(600px 400px at 70% 70%, rgba(255,255,255,.05), transparent 70%),
         radial-gradient(circle at 50% 50%, var(--felt-1) 0%, var(--felt-2) 55%, var(--felt-3) 100%);
-      box-shadow: 0 18px 40px rgba(0,0,0,.55), inset 0 2px 6px rgba(255,255,255,.10),
+      box-shadow: 0 20px 48px rgba(0,0,0,.6), inset 0 2px 6px rgba(255,255,255,.10),
                   inset 0 -6px 18px rgba(0,0,0,.45);
     }
+    /* Barandal de madera */
     .table::before{
       content:""; position:absolute; inset: calc(var(--pad) * -0.9);
-      border-radius: calc(var(--radius) + 28px);
-      background: linear-gradient(180deg, var(--wood-1), var(--wood-2) 45%, var(--wood-2) 60%, var(--wood-3));
-      box-shadow: 0 20px 45px rgba(0,0,0,.6), inset 0 2px 3px rgba(255,255,255,.25),
-                  inset 0 -3px 6px rgba(0,0,0,.55);
+      border-radius: calc(var(--radius) + 30px);
+      background:
+        linear-gradient(180deg, var(--wood-1), var(--wood-2) 45%, var(--wood-3) 70%, var(--wood-4));
+      box-shadow: 0 22px 50px rgba(0,0,0,.65), inset 0 2px 3px rgba(255,255,255,.22),
+                  inset 0 -3px 8px rgba(0,0,0,.55);
       z-index:-1;
     }
-    h1{ font-size: clamp(22px, 3.2vw, 34px); margin: 0 0 14px; }
+    /* Línea de apuesta (oval) */
+    .table::after{
+      content:""; position:absolute; inset: calc(var(--pad) * 0.65);
+      border-radius: 999px;
+      border: 2.5px solid rgba(234,203,123,.85);
+      box-shadow: inset 0 0 6px rgba(234,203,123,.35), 0 2px 10px rgba(0,0,0,.35);
+      pointer-events:none;
+    }
+
+    /* Logo */
+    .logo{
+      position:absolute; left: clamp(14px,2vw,24px); top: clamp(10px,1.8vw,18px);
+      display:flex; align-items:center; gap:8px;
+      padding: 6px 12px; border-radius: 999px;
+      background: radial-gradient(circle at 30% 20%, #ef4444 0%, #9a1b1b 70%);
+      color: #fff; font-weight: 800; letter-spacing: .4px; text-transform: uppercase;
+      box-shadow: 0 6px 14px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.25);
+    }
+    .logo .chip{
+      width: clamp(16px,2.6vw,22px); height: clamp(16px,2.6vw,22px); border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #fff 0%, #ffd86a 30%, #a6761a 70%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.6), inset 0 -2px 4px rgba(0,0,0,.35);
+    }
+
+    /* Tipografía fluida */
+    h1{ font-size: clamp(22px, 3.2vw, 34px); margin: 0 0 16px; padding-left: clamp(0px, 8vw, 120px); }
     h2{ font-size: clamp(18px, 2.4vw, 22px); margin: 6px 0; color: var(--ink-dim); }
     h3{ font-size: clamp(16px, 2.1vw, 20px); margin: 10px 0; color: var(--ink-dim); }
+
+    /* Layouts */
     .grid-players{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: clamp(10px, 2vw, 22px); }
     @media (max-width: 720px){ .grid-players{ grid-template-columns: 1fr; } }
+
     .row{ display:flex; gap: 10px; align-items:center; flex-wrap:wrap; }
-    .col{ display:flex; flex-direction:column; gap: 8px; }
+    .col{ display:flex; flex-direction:column; gap: 10px; }
+
+    /* Botones */
     .btn{
       padding: 12px 16px; border-radius: 14px; border:1px solid rgba(255,255,255,.25);
       background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
@@ -54,8 +98,9 @@
     }
     .btn:hover{ filter: brightness(1.06); }
     .btn:active{ transform: translateY(1px); }
+    .btn-secondary{ background: rgba(255,255,255,.08); }
 
-    /* Cartas visibles (slots y board) */
+    /* Cartas/slots */
     .card{
       width: var(--cardW); height: calc(var(--cardW) * 1.5); object-fit: contain;
       border-radius: 10px; border: 1px solid rgba(255,255,255,.35);
@@ -81,11 +126,10 @@
       border: 1px solid rgba(255,255,255,.25); box-shadow: 0 16px 40px rgba(0,0,0,.6);
       padding: 14px;
     }
-    .picker-header{ display:flex; align-items:center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .picker-header{ display:flex; align-items:center; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
     .picker-title{ font-weight:700; }
-    .picker-grid{
-      display:grid; grid-template-columns: repeat(auto-fit, minmax(var(--cardW), 1fr)); gap: 10px;
-    }
+    .picker-hint{ font-size: .9em; opacity:.9; }
+    .picker-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(var(--cardW), 1fr)); gap: 10px; }
     .pick-btn{
       border: 1px solid rgba(255,255,255,.35); border-radius: 10px; background: rgba(255,255,255,.08);
       padding: 0; cursor:pointer; display:block;
@@ -93,24 +137,31 @@
     }
     .pick-btn img{ width: 100%; height: calc(var(--cardW) * 1.5); object-fit: contain; display:block; border-radius: 10px; }
     .pick-btn[disabled]{ filter: grayscale(1) brightness(.7); cursor:not-allowed; opacity: .6; }
-    .picker-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top: 10px; }
-    .btn-secondary{ background: rgba(255,255,255,.08); }
+    .picker-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top: 10px; flex-wrap: wrap; }
+
+    .search{
+      display:flex; align-items:center; gap:8px; flex: 1 1 260px;
+      border:1px solid rgba(255,255,255,.25); border-radius:12px; padding:8px 10px;
+      background: rgba(255,255,255,.08); color: var(--ink);
+    }
+    .search input{
+      flex:1; min-width:120px; border:none; outline:none; background:transparent; color: var(--ink);
+    }
   </style>
 </head>
 <body>
   <div class="page">
     <div class="table">
+      <div class="logo"><span class="chip"></span> Poker Juanito</div>
       <h1>Analizador de Poker – Web</h1>
 
       <section class="grid-players">
         <div class="col">
           <h2>Jugador 1</h2>
-          <!-- Slots clicables -->
           <div class="cards-row">
             <button class="slot" data-slot="j1c1" title="Elegir carta J1-1">Elegir</button>
             <button class="slot" data-slot="j1c2" title="Elegir carta J1-2">Elegir</button>
           </div>
-          <!-- Vista de cartas elegidas -->
           <div class="cards-row">
             <img id="img_j1c1" class="card" />
             <img id="img_j1c2" class="card" />
@@ -156,7 +207,7 @@
       </section>
       <div id="simu" class="out"></div>
 
-      <!-- Inputs ocultos para compatibilidad con la lógica existente -->
+      <!-- Inputs ocultos para la lógica -->
       <input id="j1c1" type="hidden"><input id="j1c2" type="hidden">
       <input id="j2c1" type="hidden"><input id="j2c2" type="hidden">
     </div>
@@ -166,13 +217,20 @@
   <div class="picker-backdrop" id="pickerBackdrop" aria-hidden="true">
     <div class="picker" role="dialog" aria-modal="true">
       <div class="picker-header">
-        <div class="picker-title" id="pickerTitle">Elige una carta</div>
-        <button class="btn btn-secondary" id="btnClosePicker">Cerrar</button>
+        <div>
+          <div class="picker-title" id="pickerTitle">Elige una carta</div>
+          <div class="picker-hint">Tip: busca por código (ej. <b>10D</b>, <b>AC</b>, <b>7P</b>). Palos: C=Corazones, D=Diamantes, P=Picas, T=Tréboles.</div>
+        </div>
+        <div class="search">
+          🔎 <input id="pickerSearch" type="text" placeholder="Buscar carta..." />
+          <button class="btn btn-secondary" id="btnClearSearch" type="button">Limpiar</button>
+          <button class="btn btn-secondary" id="btnClosePicker" type="button">Cerrar</button>
+        </div>
       </div>
       <div class="picker-grid" id="pickerGrid"></div>
       <div class="picker-actions">
-        <button class="btn btn-secondary" id="btnClearSlot">Quitar carta</button>
-        <button class="btn" id="btnAcceptPicker">Aceptar</button>
+        <button class="btn btn-secondary" id="btnClearSlot" type="button">Quitar carta</button>
+        <button class="btn" id="btnAcceptPicker" type="button">Aceptar</button>
       </div>
     </div>
   </div>
@@ -185,16 +243,17 @@
     const nombrePNG = (code) => `Cartas/${code}.png`;
     const $ = (id) => document.getElementById(id);
 
-    // ---- Picker visual ----
-    let currentSlot = null;   // 'j1c1' | 'j1c2' | 'j2c1' | 'j2c2'
-    let tempChoice  = null;   // elección temporal en el modal
+    // ---- Picker visual (con buscador) ----
+    let currentSlot = null;  // 'j1c1' | 'j1c2' | 'j2c1' | 'j2c2'
+    let tempChoice  = null;
+    let lastFilter  = '';
 
-    // botones de los slots
     document.querySelectorAll('.slot').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        openPicker(btn.dataset.slot);
-      });
+      btn.addEventListener('click', ()=> openPicker(btn.dataset.slot));
     });
+    // Permite abrir tocando la carta ya mostrada
+    [['img_j1c1','j1c1'],['img_j1c2','j1c2'],['img_j2c1','j2c1'],['img_j2c2','j2c2']]
+      .forEach(([img,slot])=> document.getElementById(img).addEventListener('click',()=>openPicker(slot)));
 
     function getUsedSet(exceptSlot=null){
       const ids = ['j1c1','j1c2','j2c1','j2c2'].filter(id => id !== exceptSlot);
@@ -203,54 +262,53 @@
       return set;
     }
 
-    function openPicker(slot){
-      currentSlot = slot;
-      tempChoice  = $(slot).value || null;
-      $('pickerTitle').textContent = `Elige una carta (${slot.toUpperCase()})`;
-      const used = getUsedSet(slot);
-      const grid = $('pickerGrid');
-      grid.innerHTML = '';
+    function normalize(str){ return (str||'').toUpperCase().replace(/\s+/g,''); }
+
+    function renderPicker(){
+      const grid = $('pickerGrid'); grid.innerHTML = '';
+      const used = getUsedSet(currentSlot);
+      const q = normalize($('pickerSearch').value);
       cartas.forEach(code=>{
+        if (q && !normalize(code).includes(q)) return;
         const b = document.createElement('button');
-        b.className = 'pick-btn';
-        b.type = 'button';
-        b.title = code;
+        b.className = 'pick-btn'; b.type = 'button'; b.title = code;
         b.innerHTML = `<img src="${nombrePNG(code)}" alt="${code}">`;
         if (used.has(code)) b.disabled = true;
         if (tempChoice === code) b.style.outline = '3px solid #cfe9df';
         b.addEventListener('click', ()=>{
           tempChoice = code;
-          // marcar selección visualmente
           [...grid.querySelectorAll('.pick-btn')].forEach(x=>x.style.outline='none');
           b.style.outline = '3px solid #cfe9df';
         });
         grid.appendChild(b);
       });
-      $('pickerBackdrop').classList.add('open');
-      $('pickerBackdrop').setAttribute('aria-hidden','false');
     }
 
+    function openPicker(slot){
+      currentSlot = slot;
+      tempChoice  = $(slot).value || null;
+      $('pickerTitle').textContent = `Elige una carta (${slot.toUpperCase()})`;
+      $('pickerSearch').value = lastFilter = '';
+      renderPicker();
+      $('pickerBackdrop').classList.add('open');
+      $('pickerBackdrop').setAttribute('aria-hidden','false');
+      setTimeout(()=> $('pickerSearch').focus(), 60);
+    }
     function closePicker(){
       $('pickerBackdrop').classList.remove('open');
       $('pickerBackdrop').setAttribute('aria-hidden','true');
       currentSlot = null; tempChoice = null;
     }
-
-    $('btnClosePicker').onclick = closePicker;
+    $('pickerSearch').addEventListener('input', ()=>{ lastFilter = $('pickerSearch').value; renderPicker(); });
+    $('btnClearSearch').onclick = ()=>{ $('pickerSearch').value=''; renderPicker(); };
+    $('btnClosePicker').onclick  = closePicker;
     $('btnAcceptPicker').onclick = ()=>{
       if (!currentSlot || !tempChoice) { closePicker(); return; }
       setSlotValue(currentSlot, tempChoice);
       closePicker();
     };
-    $('btnClearSlot').onclick = ()=>{
-      if (!currentSlot) return;
-      setSlotValue(currentSlot, '');
-      closePicker();
-    };
-    // cerrar al clickear fuera
-    $('pickerBackdrop').addEventListener('click', (e)=>{
-      if (e.target.id === 'pickerBackdrop') closePicker();
-    });
+    $('btnClearSlot').onclick   = ()=>{ if (currentSlot){ setSlotValue(currentSlot,''); closePicker(); } };
+    $('pickerBackdrop').addEventListener('click', (e)=>{ if (e.target.id === 'pickerBackdrop') closePicker(); });
 
     function setSlotValue(slot, code){
       $(slot).value = code || '';
@@ -277,14 +335,14 @@
       return res;
     }
 
-    // ===== Evaluador Texas Hold'em (7 -> mejor 5) =====
+    /* ===== Evaluador Texas Hold'em (7 -> mejor 5) ===== */
     const valorA = (v) => v==='A'?14 : v==='K'?13 : v==='Q'?12 : v==='J'?11 : parseInt(v,10);
     function parse(code){ return { r: valorA(code.slice(0,-1)), s: code.slice(-1) }; }
     function uniqueDesc(arr){ return [...new Set(arr)].sort((a,b)=>b-a); }
     function uniqueAsc(arr){ return [...new Set(arr)].sort((a,b)=>a-b); }
     function highestStraight(ranks){
       let u = uniqueAsc(ranks);
-      if (u.includes(14)) u = [1, ...u];
+      if (u.includes(14)) u = [1, ...u]; // A como 1 para A2345
       let best = 0, run = 1;
       for (let i=1;i<u.length;i++){
         if (u[i] === u[i-1] + 1) { run++; if (run >= 5) best = Math.max(best, u[i] === 1 ? 5 : u[i]); }
