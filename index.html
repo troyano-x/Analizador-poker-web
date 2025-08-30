@@ -17,10 +17,7 @@
     .board { display: flex; gap: 8px; align-items: center; }
     select { padding: 6px 8px; border-radius: 8px; border: 1px solid #ccc; }
     input[type="number"] { width: 110px; padding: 6px 8px; border-radius: 8px; border: 1px solid #ccc; }
-    .err { color: #b00; font-weight: 600; }
   </style>
-  <!-- Librería de evaluación de manos -->
-  <script src="https://unpkg.com/pokersolver@2.1.3/dist/pokersolver.min.js"></script>
 </head>
 <body>
   <h1>Analizador de Poker – Web</h1>
@@ -76,192 +73,197 @@
     <button class="btn" id="btnSimular">Simular probabilidades</button>
   </div>
   <div id="simu" class="out"></div>
-  <div id="err" class="out err"></div>
 
   <script>
-    // === Config ===
+    // ====== Config / utilidades ======
     const valores = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
-    const palos = ['C','D','P','T']; // C=Corazones(h), D=Diamantes(d), P=Picas(s), T=Tréboles(c)
-    const cartas = [];
-    for (const v of valores) for (const p of palos) cartas.push(v+p);
-
-    // Mapas a pokersolver
-    const paloToSolver = { C:'h', D:'d', P:'s', T:'c' }; // hearts/diamonds/spades/clubs
+    const palos = ['C','D','P','T']; // C=Corazones, D=Diamantes, P=Picas, T=Tréboles (solo nombres de imagen)
+    const cartas = []; for (const v of valores) for (const p of palos) cartas.push(v+p);
     const nombrePNG = (code) => `Cartas/${code}.png`;
-
-    const traductor = {
-      'High Card': 'Carta alta',
-      'Pair': 'Par',
-      'Two Pair': 'Doble par',
-      'Three of a Kind': 'Trío',
-      'Straight': 'Escalera',
-      'Flush': 'Color',
-      'Full House': 'Full',
-      'Four of a Kind': 'Póker',
-      'Straight Flush': 'Escalera color',
-      'Royal Flush': 'Escalera real'
-    };
-
-    // Helpers DOM
     const $ = (id) => document.getElementById(id);
 
-    function llenarSelect(sel) {
-      sel.innerHTML = '<option value="">Carta</option>' +
-        cartas.map(c => `<option value="${c}">${c}</option>`).join('');
+    function llenarSelect(sel){
+      sel.innerHTML = '<option value="">Carta</option>' + cartas.map(c=>`<option value="${c}">${c}</option>`).join('');
     }
-
-    function mostrarCarta(code, imgEl) {
-      imgEl.src = code ? nombrePNG(code) : '';
-    }
-
-    // Conversión: intentamos con 'T' y si falla probamos con '10'
-    function toSolverArray_T(codes) {
-      return codes.map(code => {
-        const valor = code.slice(0, -1);
-        const palo  = code.slice(-1);
-        const face  = (valor === '10') ? 'T' : valor;
-        return face + paloToSolver[palo];
-      });
-    }
-    function toSolverArray_10(codes) {
-      return codes.map(code => {
-        const valor = code.slice(0, -1);
-        const palo  = code.slice(-1);
-        return valor + paloToSolver[palo];
-      });
-    }
-
-    // Valida entradas
-    function validar(cuatro) {
+    function mostrarCarta(code, img){ img.src = code ? nombrePNG(code) : ''; }
+    function validar(cuatro){
       if (cuatro.some(c => !c)) { alert('❌ Debes seleccionar las 4 cartas (2 por jugador).'); return false; }
-      const set = new Set(cuatro);
-      if (set.size !== cuatro.length) { alert('❌ No se pueden repetir cartas entre jugadores.'); return false; }
+      const s = new Set(cuatro); if (s.size !== cuatro.length) { alert('❌ No se pueden repetir cartas entre jugadores.'); return false; }
       return true;
     }
-
-    // Random board sin repetir
-    function barajarBoard(usadas) {
-      const disp = cartas.filter(c => !usadas.has(c));
-      const res = [];
-      for (let i = 0; i < 5; i++) {
-        const idx = Math.floor(Math.random() * disp.length);
-        res.push(disp[idx]);
-        disp.splice(idx, 1);
-      }
+    function barajarBoard(usadas){
+      const disp = cartas.filter(c => !usadas.has(c)); const res=[];
+      for (let i=0;i<5;i++){ const k=Math.floor(Math.random()*disp.length); res.push(disp[k]); disp.splice(k,1); }
       return res;
     }
 
-    // === Resolver con fallback T/10 ===
-    function solve7Safe(all7) {
-      const H = window.pokersolver && window.pokersolver.Hand;
-      if (!H) throw new Error('pokersolver no cargó');
-      try { return H.solve(toSolverArray_T(all7)); }
-      catch (e1) {
-        try { return H.solve(toSolverArray_10(all7)); }
-        catch (e2) {
-          // Propaga el primer error para diagnosticar
-          e1.message = e1.message + ' | fallback:' + (e2 && e2.message ? e2.message : 'n/a');
-          throw e1;
-        }
+    // ====== Evaluador Texas Hold'em (7 cartas -> mejor 5) ======
+    // Mapeo de código ('10T','AC','QP') a {r:2..14, s:'C|D|P|T'}
+    const valorA = (v) => v==='A'?14 : v==='K'?13 : v==='Q'?12 : v==='J'?11 : parseInt(v,10);
+    function parse(code){
+      return { r: valorA(code.slice(0,-1)), s: code.slice(-1) };
+    }
+
+    function uniqueDesc(arr){ return [...new Set(arr)].sort((a,b)=>b-a); }
+    function uniqueAsc(arr){ return [...new Set(arr)].sort((a,b)=>a-b); }
+
+    // Detecta mejor escalera y devuelve la carta alta (0 = no hay)
+    function highestStraight(ranks){
+      // ranks: array de enteros 2..14
+      let u = uniqueAsc(ranks);
+      if (u.includes(14)) u = [1, ...u]; // A también como 1
+      let best = 0, run = 1;
+      for (let i=1;i<u.length;i++){
+        if (u[i] === u[i-1] + 1) {
+          run++;
+          if (run >= 5) best = Math.max(best, u[i] === 1 ? 5 : u[i]); // A2345 -> alta=5
+        } else run = 1;
       }
+      return best; // 0 si no hay
     }
 
-    function evaluar(manos, board) {
-      const h1 = solve7Safe([...manos[0], ...board]);
-      const h2 = solve7Safe([...manos[1], ...board]);
-      if (h1.rank < h2.rank) return { ganador: 1, jugada1: h1.descr, jugada2: h2.descr };
-      if (h2.rank < h1.rank) return { ganador: 2, jugada1: h2.descr, jugada2: h1.descr };
-      return { ganador: 0, jugada1: h1.descr, jugada2: h2.descr };
+    // Devuelve objeto {cat, tiebreak:[], descr}
+    function best5of7(codes){
+      const cards = codes.map(parse);
+      const ranks = cards.map(c=>c.r).sort((a,b)=>b-a);
+
+      // Contadores por rango y por palo
+      const cnt = new Map(), suit = new Map(); // cnt: rank->cantidad, suit: 'C'|'D'|'P'|'T' -> array de ranks
+      for (const c of cards){
+        cnt.set(c.r, (cnt.get(c.r)||0)+1);
+        if (!suit.has(c.s)) suit.set(c.s, []);
+        suit.get(c.s).push(c.r);
+      }
+
+      // Flush / Straight Flush
+      let flushSuit=null, flushRanks=[];
+      for (const [s, arr] of suit){
+        if (arr.length >= 5){ flushSuit=s; flushRanks = arr.sort((a,b)=>b-a); break; }
+      }
+      if (flushSuit){
+        const sfHigh = highestStraight(flushRanks);
+        if (sfHigh) return { cat:8, tiebreak:[sfHigh], descr:'Escalera color' };
+      }
+
+      // Recuento de grupos por tamaño
+      const groups = {4:[],3:[],2:[],1:[]};
+      for (const [r, c] of cnt) groups[c].push(r);
+      for (const k of [4,3,2,1]) groups[k].sort((a,b)=>b-a);
+
+      // Four of a kind
+      if (groups[4].length){
+        const quad = groups[4][0];
+        const kick = uniqueDesc(ranks.filter(r=>r!==quad))[0];
+        return { cat:7, tiebreak:[quad, kick], descr:'Póker' };
+      }
+      // Full house
+      if (groups[3].length && (groups[2].length || groups[3].length>=2)){
+        const triple = groups[3][0];
+        const pair   = (groups[3].length>=2) ? groups[3][1] : groups[2][0];
+        return { cat:6, tiebreak:[triple, pair], descr:'Full' };
+      }
+      // Flush
+      if (flushSuit){
+        const top5 = uniqueDesc(flushRanks).slice(0,5);
+        return { cat:5, tiebreak:top5, descr:'Color' };
+      }
+      // Straight
+      const stHigh = highestStraight(ranks);
+      if (stHigh){
+        return { cat:4, tiebreak:[stHigh], descr:'Escalera' };
+      }
+      // Three of a kind
+      if (groups[3].length){
+        const t = groups[3][0];
+        const kickers = uniqueDesc(ranks.filter(r=>r!==t)).slice(0,2);
+        return { cat:3, tiebreak:[t, ...kickers], descr:'Trío' };
+      }
+      // Two pair
+      if (groups[2].length >= 2){
+        const [p1, p2] = groups[2].slice(0,2); // ya vienen ordenados desc
+        const kick = uniqueDesc(ranks.filter(r=>r!==p1 && r!==p2))[0];
+        return { cat:2, tiebreak:[p1, p2, kick], descr:'Doble par' };
+      }
+      // One pair
+      if (groups[2].length){
+        const p = groups[2][0];
+        const kicks = uniqueDesc(ranks.filter(r=>r!==p)).slice(0,3);
+        return { cat:1, tiebreak:[p, ...kicks], descr:'Par' };
+      }
+      // High card
+      return { cat:0, tiebreak: uniqueDesc(ranks).slice(0,5), descr:'Carta alta' };
     }
 
-    function traducirCategoria(descr) {
-      const cat = (descr.split(',')[0] || '').trim();
-      return traductor[cat] || cat;
+    // Compara dos resultados {cat, tiebreak[]}
+    function compareHands(a,b){
+      if (a.cat !== b.cat) return a.cat - b.cat; // 8 mejor que 0
+      const n = Math.max(a.tiebreak.length, b.tiebreak.length);
+      for (let i=0;i<n;i++){
+        const va = a.tiebreak[i]||0, vb = b.tiebreak[i]||0;
+        if (va !== vb) return va - vb;
+      }
+      return 0;
     }
 
-    // === Inicialización UI ===
+    function evaluar(manos, board){
+      const h1 = best5of7([...manos[0], ...board]);
+      const h2 = best5of7([...manos[1], ...board]);
+      const cmp = compareHands(h1, h2);
+      if (cmp > 0) return { ganador:1, jugada1:h1.descr, jugada2:h2.descr };
+      if (cmp < 0) return { ganador:2, jugada1:h1.descr, jugada2:h2.descr };
+      return { ganador:0, jugada1:h1.descr, jugada2:h2.descr };
+    }
+
+    // ====== UI ======
     document.addEventListener('DOMContentLoaded', () => {
       ['j1c1','j1c2','j2c1','j2c2'].forEach(id => llenarSelect($(id)));
 
-      // Mostrar manos
       $('btnMostrar').onclick = () => {
-        const c1 = $('j1c1').value, c2 = $('j1c2').value, c3 = $('j2c1').value, c4 = $('j2c2').value;
+        const c1=$('j1c1').value, c2=$('j1c2').value, c3=$('j2c1').value, c4=$('j2c2').value;
         if (!validar([c1,c2,c3,c4])) return;
-        ['img_j1c1','img_j1c2','img_j2c1','img_j2c2'].forEach((id, i) => {
-          const code = [c1,c2,c3,c4][i];
-          mostrarCarta(code, $(id));
-        });
-        $('err').textContent = '';
+        mostrarCarta(c1,$('img_j1c1')); mostrarCarta(c2,$('img_j1c2'));
+        mostrarCarta(c3,$('img_j2c1')); mostrarCarta(c4,$('img_j2c2'));
       };
 
-      // Board + evaluar
-      let board = [];
+      let board=[];
       $('btnBoardEval').onclick = () => {
-        const c1 = $('j1c1').value, c2 = $('j1c2').value, c3 = $('j2c1').value, c4 = $('j2c2').value;
+        const c1=$('j1c1').value, c2=$('j1c2').value, c3=$('j2c1').value, c4=$('j2c2').value;
         if (!validar([c1,c2,c3,c4])) return;
         const usadas = new Set([c1,c2,c3,c4]);
         board = barajarBoard(usadas);
-        board.forEach((c,i) => mostrarCarta(c, $('board'+i)));
-        try {
-          const r = evaluar([[c1,c2],[c3,c4]], board);
-          $('resultado').textContent =
-            r.ganador === 1 ? `🏆 Gana Jugador 1 (${traducirCategoria(r.jugada1)})` :
-            r.ganador === 2 ? `🏆 Gana Jugador 2 (${traducirCategoria(r.jugada2)})` :
-                              `🤝 Empate (${traducirCategoria(r.jugada1)})`;
-          $('err').textContent = '';
-        } catch (e) {
-          $('resultado').textContent = '';
-          $('err').textContent = '⚠️ Error evaluando (board único): ' + e.message;
-          console.error(e);
-        }
+        board.forEach((c,i)=>mostrarCarta(c,$('board'+i)));
+        const r = evaluar([[c1,c2],[c3,c4]], board);
+        $('resultado').textContent =
+          r.ganador===1 ? `🏆 Gana Jugador 1 (${r.jugada1})` :
+          r.ganador===2 ? `🏆 Gana Jugador 2 (${r.jugada2})` :
+                          `🤝 Empate (${r.jugada1})`;
       };
 
-      // Simular probabilidades
       $('btnSimular').onclick = () => {
-        const c1 = $('j1c1').value, c2 = $('j1c2').value, c3 = $('j2c1').value, c4 = $('j2c2').value;
+        const c1=$('j1c1').value, c2=$('j1c2').value, c3=$('j2c1').value, c4=$('j2c2').value;
         if (!validar([c1,c2,c3,c4])) return;
 
         let n = parseInt(($('sims').value || '1000'), 10);
         if (!Number.isFinite(n) || n < 1) n = 1000;
-        n = Math.min(n, 20000); // límite suave
+        n = Math.min(n, 20000);
 
         const usadasBase = new Set([c1,c2,c3,c4]);
-        let w1 = 0, w2 = 0, emp = 0, fallos = 0;
-
-        for (let k = 0; k < n; k++) {
-          try {
-            const b = barajarBoard(usadasBase);
-            const r = evaluar([[c1,c2],[c3,c4]], b);
-            if (r.ganador === 1) w1++;
-            else if (r.ganador === 2) w2++;
-            else emp++;
-          } catch (e) {
-            fallos++;
-            // continúa con la siguiente iteración
-            if (fallos < 3) console.warn('Iteración con error:', e);
-          }
+        let w1=0, w2=0, emp=0;
+        for (let k=0;k<n;k++){
+          const b = barajarBoard(usadasBase);
+          const r = evaluar([[c1,c2],[c3,c4]], b);
+          if (r.ganador===1) w1++; else if (r.ganador===2) w2++; else emp++;
         }
-        const tot = w1 + w2 + emp;
-        if (tot === 0) {
-          $('simu').textContent = '';
-          $('err').textContent = '⚠️ No se pudieron evaluar manos en la simulación. Revisa que el CDN no esté bloqueado.';
-          return;
-        }
-        const p1 = (w1/tot*100).toFixed(2);
-        const p2 = (w2/tot*100).toFixed(2);
-        const pe = (emp/tot*100).toFixed(2);
-        $('simu').textContent = `🧠 ${tot} sims válidas (fallos: ${fallos})\nJugador 1: ${p1}%   |   Jugador 2: ${p2}%   |   Empates: ${pe}%`;
-        $('err').textContent = fallos ? '⚠️ Algunas iteraciones fallaron (ver consola).' : '';
+        const p1=(w1/n*100).toFixed(2), p2=(w2/n*100).toFixed(2), pe=(emp/n*100).toFixed(2);
+        $('simu').textContent = `🧠 ${n} sims\nJugador 1: ${p1}%   |   Jugador 2: ${p2}%   |   Empates: ${pe}%`;
       };
 
-      // Limpiar
       $('btnLimpiar').onclick = () => {
         ['j1c1','j1c2','j2c1','j2c2'].forEach(id => $(id).value = '');
         ['img_j1c1','img_j1c2','img_j2c1','img_j2c2','board0','board1','board2','board3','board4']
           .forEach(id => $(id).src = '');
         $('resultado').textContent = '';
         $('simu').textContent = '';
-        $('err').textContent = '';
         board = [];
       };
     });
