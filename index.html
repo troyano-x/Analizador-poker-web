@@ -8,15 +8,15 @@
     /* ===== Mesa de póker (tema) + diseño responsivo ===== */
     :root{
       /* Escalado fluido */
-      --cardW: clamp(56px, 9vw, 100px);
+      --cardW: clamp(56px, 9vw, 100px);          /* tamaño de los slots/board */
+      --pickW: clamp(40px, 11.5vw, 72px);        /* tamaño de cartas en el selector */
       --radius: clamp(28px, 5vw, 52px);
       --pad: clamp(14px, 3.2vw, 26px);
 
       /* Colores */
       --felt-1:#1f7a4a;  --felt-2:#0f5a37;  --felt-3:#063b25;
       --wood-1:#875431;  --wood-2:#6a3f23;  --wood-3:#51311a;  --wood-4:#3b2414;
-      --ink:#ffffff;     --ink-dim:#e8f3ed; --line:#cfe9df;
-      --gold:#eacb7b;
+      --ink:#ffffff;     --ink-dim:#e8f3ed; --line:#cfe9df; --gold:#eacb7b;
     }
 
     /* Fondo madera de tablones */
@@ -27,10 +27,9 @@
           #784d2c 0px, #7f5230 60px, #774a28 60px, #6d4324 120px ),
         linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.18));
     }
-
     .page{ padding: clamp(10px,2.6vw,22px); }
 
-    /* Contenedor con forma de mesa */
+    /* Tapete + barandal */
     .table{
       max-width: 1100px; margin: 0 auto; padding: var(--pad);
       border-radius: calc(var(--radius) + 18px); position: relative;
@@ -42,21 +41,17 @@
       box-shadow: 0 20px 48px rgba(0,0,0,.6), inset 0 2px 6px rgba(255,255,255,.10),
                   inset 0 -6px 18px rgba(0,0,0,.45);
     }
-    /* Barandal de madera */
     .table::before{
       content:""; position:absolute; inset: calc(var(--pad) * -0.9);
       border-radius: calc(var(--radius) + 30px);
-      background:
-        linear-gradient(180deg, var(--wood-1), var(--wood-2) 45%, var(--wood-3) 70%, var(--wood-4));
+      background: linear-gradient(180deg, var(--wood-1), var(--wood-2) 45%, var(--wood-3) 70%, var(--wood-4));
       box-shadow: 0 22px 50px rgba(0,0,0,.65), inset 0 2px 3px rgba(255,255,255,.22),
                   inset 0 -3px 8px rgba(0,0,0,.55);
       z-index:-1;
     }
-    /* Línea de apuesta (oval) */
     .table::after{
       content:""; position:absolute; inset: calc(var(--pad) * 0.65);
-      border-radius: 999px;
-      border: 2.5px solid rgba(234,203,123,.85);
+      border-radius: 999px; border: 2.5px solid rgba(234,203,123,.85);
       box-shadow: inset 0 0 6px rgba(234,203,123,.35), 0 2px 10px rgba(0,0,0,.35);
       pointer-events:none;
     }
@@ -64,10 +59,9 @@
     /* Logo */
     .logo{
       position:absolute; left: clamp(14px,2vw,24px); top: clamp(10px,1.8vw,18px);
-      display:flex; align-items:center; gap:8px;
-      padding: 6px 12px; border-radius: 999px;
+      display:flex; align-items:center; gap:8px; padding: 6px 12px; border-radius: 999px;
       background: radial-gradient(circle at 30% 20%, #ef4444 0%, #9a1b1b 70%);
-      color: #fff; font-weight: 800; letter-spacing: .4px; text-transform: uppercase;
+      color:#fff; font-weight:800; letter-spacing:.4px; text-transform:uppercase;
       box-shadow: 0 6px 14px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.25);
     }
     .logo .chip{
@@ -76,17 +70,16 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,.6), inset 0 -2px 4px rgba(0,0,0,.35);
     }
 
-    /* Tipografía fluida */
+    /* Texto fluido */
     h1{ font-size: clamp(22px, 3.2vw, 34px); margin: 0 0 16px; padding-left: clamp(0px, 8vw, 120px); }
     h2{ font-size: clamp(18px, 2.4vw, 22px); margin: 6px 0; color: var(--ink-dim); }
     h3{ font-size: clamp(16px, 2.1vw, 20px); margin: 10px 0; color: var(--ink-dim); }
 
-    /* Layouts */
+    /* Layout */
     .grid-players{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: clamp(10px, 2vw, 22px); }
     @media (max-width: 720px){ .grid-players{ grid-template-columns: 1fr; } }
-
     .row{ display:flex; gap: 10px; align-items:center; flex-wrap:wrap; }
-    .col{ display:flex; flex-direction:column; gap: 10px; }
+    .col{ display:flex; flex-direction:column; gap: 12px; }
 
     /* Botones */
     .btn{
@@ -100,47 +93,69 @@
     .btn:active{ transform: translateY(1px); }
     .btn-secondary{ background: rgba(255,255,255,.08); }
 
-    /* Cartas/slots */
+    /* ===== Slots (selección y vista en el mismo cuadro) ===== */
+    .slot{
+      width: var(--cardW);
+      height: calc(var(--cardW) * 1.5);
+      border-radius: 12px;
+      border: 1px dashed rgba(255,255,255,.38);
+      background: rgba(255,255,255,.07);
+      color: var(--ink-dim);
+      display: grid; place-items: center;
+      font-weight: 800; cursor: pointer;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 6px 12px rgba(0,0,0,.25);
+      position: relative; overflow: hidden;
+      text-shadow: 0 1px 0 rgba(0,0,0,.35);
+    }
+    .slot:hover{ background: rgba(255,255,255,.10); }
+    .slot img{
+      display: none;
+      width: 100%; height: 100%; object-fit: contain;
+      position: absolute; inset: 0;
+      filter: drop-shadow(0 6px 12px rgba(0,0,0,.35));
+    }
+    .slot.filled{ border-style: solid; border-color: rgba(255,255,255,.38); background: rgba(255,255,255,.08); }
+    .slot.filled span{ visibility: hidden; }
+    .slot.filled img{ display: block; }
+
+    /* Cartas del board */
     .card{
       width: var(--cardW); height: calc(var(--cardW) * 1.5); object-fit: contain;
       border-radius: 10px; border: 1px solid rgba(255,255,255,.35);
       box-shadow: 0 6px 12px rgba(0,0,0,.35); background: rgba(255,255,255,.08);
     }
     .cards-row{ display:flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-    .slot{
-      width: var(--cardW); height: calc(var(--cardW)*1.5); border-radius: 12px; border: 1px dashed rgba(255,255,255,.35);
-      background: rgba(255,255,255,.07); color: var(--ink-dim); display:grid; place-items:center;
-      font-weight:700; cursor:pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,.1);
-    }
-    .slot:hover{ background: rgba(255,255,255,.10); }
 
-    /* ===== Modal selector de cartas ===== */
+    /* ===== Modal selector de cartas (compacto) ===== */
     .picker-backdrop{
       position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none; z-index: 10;
-      align-items: center; justify-content: center; padding: 16px;
+      align-items: center; justify-content: center; padding: 10px;
     }
     .picker-backdrop.open{ display:flex; }
     .picker{
-      width: min(1000px, 100%); max-height: 90vh; overflow: auto; border-radius: 16px;
+      width: min(1000px, 100%); max-height: 92vh; overflow: auto; border-radius: 14px;
       background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
       border: 1px solid rgba(255,255,255,.25); box-shadow: 0 16px 40px rgba(0,0,0,.6);
-      padding: 14px;
+      padding: 10px;
     }
-    .picker-header{ display:flex; align-items:center; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+    .picker-header{ display:flex; align-items:center; justify-content: space-between; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
     .picker-title{ font-weight:700; }
     .picker-hint{ font-size: .9em; opacity:.9; }
-    .picker-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(var(--cardW), 1fr)); gap: 10px; }
+    .picker-grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(var(--pickW), 1fr));
+      gap: 6px;
+    }
     .pick-btn{
       border: 1px solid rgba(255,255,255,.35); border-radius: 10px; background: rgba(255,255,255,.08);
-      padding: 0; cursor:pointer; display:block;
-      box-shadow: 0 6px 12px rgba(0,0,0,.35);
+      padding: 0; cursor:pointer; display:block; box-shadow: 0 4px 10px rgba(0,0,0,.3);
     }
-    .pick-btn img{ width: 100%; height: calc(var(--cardW) * 1.5); object-fit: contain; display:block; border-radius: 10px; }
+    .pick-btn img{ width: 100%; height: calc(var(--pickW) * 1.5); object-fit: contain; display:block; border-radius: 10px; }
     .pick-btn[disabled]{ filter: grayscale(1) brightness(.7); cursor:not-allowed; opacity: .6; }
-    .picker-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top: 10px; flex-wrap: wrap; }
+    .picker-actions{ display:flex; gap:8px; justify-content:flex-end; margin-top: 8px; flex-wrap: wrap; }
 
     .search{
-      display:flex; align-items:center; gap:8px; flex: 1 1 260px;
+      display:flex; align-items:center; gap:6px; flex: 1 1 240px;
       border:1px solid rgba(255,255,255,.25); border-radius:12px; padding:8px 10px;
       background: rgba(255,255,255,.08); color: var(--ink);
     }
@@ -159,24 +174,16 @@
         <div class="col">
           <h2>Jugador 1</h2>
           <div class="cards-row">
-            <button class="slot" data-slot="j1c1" title="Elegir carta J1-1">Elegir</button>
-            <button class="slot" data-slot="j1c2" title="Elegir carta J1-2">Elegir</button>
-          </div>
-          <div class="cards-row">
-            <img id="img_j1c1" class="card" />
-            <img id="img_j1c2" class="card" />
+            <button class="slot" data-slot="j1c1" title="Elegir carta J1-1"><span>Elegir</span><img alt=""></button>
+            <button class="slot" data-slot="j1c2" title="Elegir carta J1-2"><span>Elegir</span><img alt=""></button>
           </div>
         </div>
 
         <div class="col">
           <h2>Jugador 2</h2>
           <div class="cards-row">
-            <button class="slot" data-slot="j2c1" title="Elegir carta J2-1">Elegir</button>
-            <button class="slot" data-slot="j2c2" title="Elegir carta J2-2">Elegir</button>
-          </div>
-          <div class="cards-row">
-            <img id="img_j2c1" class="card" />
-            <img id="img_j2c2" class="card" />
+            <button class="slot" data-slot="j2c1" title="Elegir carta J2-1"><span>Elegir</span><img alt=""></button>
+            <button class="slot" data-slot="j2c2" title="Elegir carta J2-2"><span>Elegir</span><img alt=""></button>
           </div>
         </div>
       </section>
@@ -219,7 +226,7 @@
       <div class="picker-header">
         <div>
           <div class="picker-title" id="pickerTitle">Elige una carta</div>
-          <div class="picker-hint">Tip: busca por código (ej. <b>10D</b>, <b>AC</b>, <b>7P</b>). Palos: C=Corazones, D=Diamantes, P=Picas, T=Tréboles.</div>
+          <div class="picker-hint">Busca por código (ej. <b>10D</b>, <b>AC</b>, <b>7P</b>). Palos: C=Corazones, D=Diamantes, P=Picas, T=Tréboles.</div>
         </div>
         <div class="search">
           🔎 <input id="pickerSearch" type="text" placeholder="Buscar carta..." />
@@ -243,17 +250,15 @@
     const nombrePNG = (code) => `Cartas/${code}.png`;
     const $ = (id) => document.getElementById(id);
 
+    // ---- Slots: abrir selector al tocar (y también al tocar la propia carta) ----
+    document.querySelectorAll('.slot').forEach(btn=>{
+      btn.addEventListener('click', ()=> openPicker(btn.dataset.slot));
+      btn.querySelector('img').addEventListener('click', (e)=>{ e.stopPropagation(); openPicker(btn.dataset.slot); });
+    });
+
     // ---- Picker visual (con buscador) ----
     let currentSlot = null;  // 'j1c1' | 'j1c2' | 'j2c1' | 'j2c2'
     let tempChoice  = null;
-    let lastFilter  = '';
-
-    document.querySelectorAll('.slot').forEach(btn=>{
-      btn.addEventListener('click', ()=> openPicker(btn.dataset.slot));
-    });
-    // Permite abrir tocando la carta ya mostrada
-    [['img_j1c1','j1c1'],['img_j1c2','j1c2'],['img_j2c1','j2c1'],['img_j2c2','j2c2']]
-      .forEach(([img,slot])=> document.getElementById(img).addEventListener('click',()=>openPicker(slot)));
 
     function getUsedSet(exceptSlot=null){
       const ids = ['j1c1','j1c2','j2c1','j2c2'].filter(id => id !== exceptSlot);
@@ -261,7 +266,6 @@
       ids.forEach(id => { const v=$(id).value; if (v) set.add(v); });
       return set;
     }
-
     function normalize(str){ return (str||'').toUpperCase().replace(/\s+/g,''); }
 
     function renderPicker(){
@@ -288,18 +292,18 @@
       currentSlot = slot;
       tempChoice  = $(slot).value || null;
       $('pickerTitle').textContent = `Elige una carta (${slot.toUpperCase()})`;
-      $('pickerSearch').value = lastFilter = '';
+      $('pickerSearch').value = '';
       renderPicker();
       $('pickerBackdrop').classList.add('open');
       $('pickerBackdrop').setAttribute('aria-hidden','false');
-      setTimeout(()=> $('pickerSearch').focus(), 60);
+      setTimeout(()=> $('pickerSearch').focus(), 50);
     }
     function closePicker(){
       $('pickerBackdrop').classList.remove('open');
       $('pickerBackdrop').setAttribute('aria-hidden','true');
       currentSlot = null; tempChoice = null;
     }
-    $('pickerSearch').addEventListener('input', ()=>{ lastFilter = $('pickerSearch').value; renderPicker(); });
+    $('pickerSearch').addEventListener('input', renderPicker);
     $('btnClearSearch').onclick = ()=>{ $('pickerSearch').value=''; renderPicker(); };
     $('btnClosePicker').onclick  = closePicker;
     $('btnAcceptPicker').onclick = ()=>{
@@ -312,18 +316,20 @@
 
     function setSlotValue(slot, code){
       $(slot).value = code || '';
-      const imgId = 'img_'+slot;
-      const slotBtn = document.querySelector(`.slot[data-slot="${slot}"]`);
+      const btn = document.querySelector(`.slot[data-slot="${slot}"]`);
+      const img = btn.querySelector('img');
+      const label = btn.querySelector('span');
       if (code){
-        document.getElementById(imgId).src = nombrePNG(code);
-        slotBtn.textContent = code;
+        img.src = nombrePNG(code);
+        btn.classList.add('filled');
+        label.textContent = code;
       }else{
-        document.getElementById(imgId).src = '';
-        slotBtn.textContent = 'Elegir';
+        img.src = '';
+        btn.classList.remove('filled');
+        label.textContent = 'Elegir';
       }
     }
 
-    function mostrarCarta(code, img){ img.src = code ? nombrePNG(code) : ''; }
     function validar(cuatro){
       if (cuatro.some(c => !c)) { alert('❌ Debes seleccionar las 4 cartas (2 por jugador).'); return false; }
       const s = new Set(cuatro); if (s.size !== cuatro.length) { alert('❌ No se pueden repetir cartas entre jugadores.'); return false; }
@@ -342,8 +348,7 @@
     function uniqueAsc(arr){ return [...new Set(arr)].sort((a,b)=>a-b); }
     function highestStraight(ranks){
       let u = uniqueAsc(ranks);
-      if (u.includes(14)) u = [1, ...u]; // A como 1 para A2345
-      let best = 0, run = 1;
+      if (u.includes(14)) u = [1, ...u]; let best = 0, run = 1;
       for (let i=1;i<u.length;i++){
         if (u[i] === u[i-1] + 1) { run++; if (run >= 5) best = Math.max(best, u[i] === 1 ? 5 : u[i]); }
         else run = 1;
@@ -360,9 +365,7 @@
         suit.get(c.s).push(c.r);
       }
       let flushSuit=null, flushRanks=[];
-      for (const [s, arr] of suit){
-        if (arr.length >= 5){ flushSuit=s; flushRanks = arr.sort((a,b)=>b-a); break; }
-      }
+      for (const [s, arr] of suit){ if (arr.length >= 5){ flushSuit=s; flushRanks = arr.sort((a,b)=>b-a); break; } }
       if (flushSuit){
         const sfHigh = highestStraight(flushRanks);
         if (sfHigh) return { cat:8, tiebreak:[sfHigh], descr:'Escalera color' };
@@ -421,21 +424,19 @@
       return { ganador:0, jugada1:h1.descr, jugada2:h2.descr };
     }
 
-    // ---- Botones principales ----
+    // ---- Acciones principales ----
     $('btnMostrar').onclick = () => {
       const c1=$('j1c1').value, c2=$('j1c2').value, c3=$('j2c1').value, c4=$('j2c2').value;
-      if (!validar([c1,c2,c3,c4])) return;
-      mostrarCarta(c1,$('img_j1c1')); mostrarCarta(c2,$('img_j1c2'));
-      mostrarCarta(c3,$('img_j2c1')); mostrarCarta(c4,$('img_j2c2'));
+      validar([c1,c2,c3,c4]); // solo valida: las cartas ya están visibles en los slots
     };
     $('btnBoardEval').onclick = () => {
       const c1=$('j1c1').value, c2=$('j1c2').value, c3=$('j2c1').value, c4=$('j2c2').value;
       if (!validar([c1,c2,c3,c4])) return;
       const usadas = new Set([c1,c2,c3,c4]);
       const board = barajarBoard(usadas);
-      [0,1,2,3,4].forEach(i => mostrarCarta(board[i], $('board'+i)));
+      [0,1,2,3,4].forEach(i => document.getElementById('board'+i).src = `Cartas/${board[i]}.png`);
       const r = evaluar([[c1,c2],[c3,c4]], board);
-      $('resultado').textContent =
+      document.getElementById('resultado').textContent =
         r.ganador===1 ? `🏆 Gana Jugador 1 (${r.jugada1})` :
         r.ganador===2 ? `🏆 Gana Jugador 2 (${r.jugada2})` :
                         `🤝 Empate (${r.jugada1})`;
@@ -443,7 +444,7 @@
     $('btnSimular').onclick = () => {
       const c1=$('j1c1').value, c2=$('j1c2').value, c3=$('j2c1').value, c4=$('j2c2').value;
       if (!validar([c1,c2,c3,c4])) return;
-      let n = parseInt(($('sims').value || '1000'), 10);
+      let n = parseInt((document.getElementById('sims').value || '1000'), 10);
       if (!Number.isFinite(n) || n < 1) n = 1000;
       n = Math.min(n, 20000);
       const usadasBase = new Set([c1,c2,c3,c4]);
@@ -454,12 +455,13 @@
         if (r.ganador===1) w1++; else if (r.ganador===2) w2++; else emp++;
       }
       const p1=(w1/n*100).toFixed(2), p2=(w2/n*100).toFixed(2), pe=(emp/n*100).toFixed(2);
-      $('simu').textContent = `🧠 ${n} sims\nJugador 1: ${p1}%   |   Jugador 2: ${p2}%   |   Empates: ${pe}%`;
+      document.getElementById('simu').textContent = `🧠 ${n} sims\nJugador 1: ${p1}%   |   Jugador 2: ${p2}%   |   Empates: ${pe}%`;
     };
-    $('btnLimpiar').onclick = () => {
+    document.getElementById('btnLimpiar').onclick = () => {
       ['j1c1','j1c2','j2c1','j2c2'].forEach(id => setSlotValue(id,''));
-      ['board0','board1','board2','board3','board4'].forEach(id => $(id).src='');
-      $('resultado').textContent = ''; $('simu').textContent = '';
+      ['board0','board1','board2','board3','board4'].forEach(id => document.getElementById(id).src='');
+      document.getElementById('resultado').textContent = '';
+      document.getElementById('simu').textContent = '';
     };
   </script>
 </body>
