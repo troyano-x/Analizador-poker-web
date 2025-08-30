@@ -17,6 +17,7 @@
     .board { display: flex; gap: 8px; align-items: center; }
     select { padding: 6px 8px; border-radius: 8px; border: 1px solid #ccc; }
     input[type="number"] { width: 110px; padding: 6px 8px; border-radius: 8px; border: 1px solid #ccc; }
+    .err { color: #b00; font-weight: 600; }
   </style>
   <!-- Librería de evaluación de manos -->
   <script src="https://unpkg.com/pokersolver@2.1.3/dist/pokersolver.min.js"></script>
@@ -75,6 +76,7 @@
     <button class="btn" id="btnSimular">Simular probabilidades</button>
   </div>
   <div id="simu" class="out"></div>
+  <div id="err" class="out err"></div>
 
   <script>
     // === Config ===
@@ -83,9 +85,8 @@
     const cartas = [];
     for (const v of valores) for (const p of palos) cartas.push(v+p);
 
-    // Mapas de conversión a pokersolver
+    // Mapas a pokersolver
     const paloToSolver = { C:'h', D:'d', P:'s', T:'c' }; // hearts/diamonds/spades/clubs
-    let TEN_SYMBOL = 'T'; // se detectará abajo automáticamente (T o 10)
     const nombrePNG = (code) => `Cartas/${code}.png`;
 
     const traductor = {
@@ -113,14 +114,24 @@
       imgEl.src = code ? nombrePNG(code) : '';
     }
 
-    // Conversión a notación del solver: detecta si usa "T" o "10"
-    function convertirASolver(code) {
-      const valor = code.slice(0, -1); // "10", "A", ...
-      const palo  = code.slice(-1);    // C/D/P/T
-      const face  = (valor === '10') ? TEN_SYMBOL : valor;
-      return face + paloToSolver[palo]; // ej: "Tc" o "10c", "Ah", "Qs"
+    // Conversión: intentamos con 'T' y si falla probamos con '10'
+    function toSolverArray_T(codes) {
+      return codes.map(code => {
+        const valor = code.slice(0, -1);
+        const palo  = code.slice(-1);
+        const face  = (valor === '10') ? 'T' : valor;
+        return face + paloToSolver[palo];
+      });
+    }
+    function toSolverArray_10(codes) {
+      return codes.map(code => {
+        const valor = code.slice(0, -1);
+        const palo  = code.slice(-1);
+        return valor + paloToSolver[palo];
+      });
     }
 
+    // Valida entradas
     function validar(cuatro) {
       if (cuatro.some(c => !c)) { alert('❌ Debes seleccionar las 4 cartas (2 por jugador).'); return false; }
       const set = new Set(cuatro);
@@ -128,6 +139,7 @@
       return true;
     }
 
+    // Random board sin repetir
     function barajarBoard(usadas) {
       const disp = cartas.filter(c => !usadas.has(c));
       const res = [];
@@ -139,17 +151,24 @@
       return res;
     }
 
-    // === Evaluación con 7 cartas (mano + board) ===
-    function resolver7(hole, board) {
-      const H = (window.pokersolver && window.pokersolver.Hand);
+    // === Resolver con fallback T/10 ===
+    function solve7Safe(all7) {
+      const H = window.pokersolver && window.pokersolver.Hand;
       if (!H) throw new Error('pokersolver no cargó');
-      const seven = [...hole, ...board].map(convertirASolver);
-      return H.solve(seven);
+      try { return H.solve(toSolverArray_T(all7)); }
+      catch (e1) {
+        try { return H.solve(toSolverArray_10(all7)); }
+        catch (e2) {
+          // Propaga el primer error para diagnosticar
+          e1.message = e1.message + ' | fallback:' + (e2 && e2.message ? e2.message : 'n/a');
+          throw e1;
+        }
+      }
     }
 
     function evaluar(manos, board) {
-      const h1 = resolver7(manos[0], board);
-      const h2 = resolver7(manos[1], board);
+      const h1 = solve7Safe([...manos[0], ...board]);
+      const h2 = solve7Safe([...manos[1], ...board]);
       if (h1.rank < h2.rank) return { ganador: 1, jugada1: h1.descr, jugada2: h2.descr };
       if (h2.rank < h1.rank) return { ganador: 2, jugada1: h2.descr, jugada2: h1.descr };
       return { ganador: 0, jugada1: h1.descr, jugada2: h2.descr };
@@ -160,35 +179,19 @@
       return traductor[cat] || cat;
     }
 
-    // === Detección del símbolo para el 10 (T vs 10) ===
-    function detectarDiez() {
-      try {
-        const H = window.pokersolver && window.pokersolver.Hand;
-        if (!H) return;
-        // 1) Probar con "10h"
-        try { H.solve(['Ah','Kh','Qh','Jh','10h','9h','8h']); TEN_SYMBOL = '10'; return; }
-        catch(e1) {}
-        // 2) Probar con "Th"
-        try { H.solve(['Ah','Kh','Qh','Jh','Th','9h','8h']); TEN_SYMBOL = 'T'; return; }
-        catch(e2) {}
-      } catch (e) { /* ignore */ }
-      // Si no se pudo detectar, dejamos 'T' por defecto
-      TEN_SYMBOL = 'T';
-    }
-
     // === Inicialización UI ===
     document.addEventListener('DOMContentLoaded', () => {
-      detectarDiez();
       ['j1c1','j1c2','j2c1','j2c2'].forEach(id => llenarSelect($(id)));
 
       // Mostrar manos
       $('btnMostrar').onclick = () => {
         const c1 = $('j1c1').value, c2 = $('j1c2').value, c3 = $('j2c1').value, c4 = $('j2c2').value;
         if (!validar([c1,c2,c3,c4])) return;
-        mostrarCarta(c1, $('img_j1c1'));
-        mostrarCarta(c2, $('img_j1c2'));
-        mostrarCarta(c3, $('img_j2c1'));
-        mostrarCarta(c4, $('img_j2c2'));
+        ['img_j1c1','img_j1c2','img_j2c1','img_j2c2'].forEach((id, i) => {
+          const code = [c1,c2,c3,c4][i];
+          mostrarCarta(code, $(id));
+        });
+        $('err').textContent = '';
       };
 
       // Board + evaluar
@@ -199,41 +202,56 @@
         const usadas = new Set([c1,c2,c3,c4]);
         board = barajarBoard(usadas);
         board.forEach((c,i) => mostrarCarta(c, $('board'+i)));
-        const r = evaluar([[c1,c2],[c3,c4]], board);
-        $('resultado').textContent =
-          r.ganador === 1 ? `🏆 Gana Jugador 1 (${traducirCategoria(r.jugada1)})` :
-          r.ganador === 2 ? `🏆 Gana Jugador 2 (${traducirCategoria(r.jugada2)})` :
-                            `🤝 Empate (${traducirCategoria(r.jugada1)})`;
+        try {
+          const r = evaluar([[c1,c2],[c3,c4]], board);
+          $('resultado').textContent =
+            r.ganador === 1 ? `🏆 Gana Jugador 1 (${traducirCategoria(r.jugada1)})` :
+            r.ganador === 2 ? `🏆 Gana Jugador 2 (${traducirCategoria(r.jugada2)})` :
+                              `🤝 Empate (${traducirCategoria(r.jugada1)})`;
+          $('err').textContent = '';
+        } catch (e) {
+          $('resultado').textContent = '';
+          $('err').textContent = '⚠️ Error evaluando (board único): ' + e.message;
+          console.error(e);
+        }
       };
 
       // Simular probabilidades
       $('btnSimular').onclick = () => {
-        try {
-          const c1 = $('j1c1').value, c2 = $('j1c2').value, c3 = $('j2c1').value, c4 = $('j2c2').value;
-          if (!validar([c1,c2,c3,c4])) return;
+        const c1 = $('j1c1').value, c2 = $('j1c2').value, c3 = $('j2c1').value, c4 = $('j2c2').value;
+        if (!validar([c1,c2,c3,c4])) return;
 
-          let n = parseInt(($('sims').value || '1000'), 10);
-          if (!Number.isFinite(n) || n < 1) n = 1000;
-          n = Math.min(n, 20000); // límite suave
+        let n = parseInt(($('sims').value || '1000'), 10);
+        if (!Number.isFinite(n) || n < 1) n = 1000;
+        n = Math.min(n, 20000); // límite suave
 
-          const usadasBase = new Set([c1,c2,c3,c4]);
-          let w1 = 0, w2 = 0, emp = 0;
+        const usadasBase = new Set([c1,c2,c3,c4]);
+        let w1 = 0, w2 = 0, emp = 0, fallos = 0;
 
-          for (let k = 0; k < n; k++) {
+        for (let k = 0; k < n; k++) {
+          try {
             const b = barajarBoard(usadasBase);
             const r = evaluar([[c1,c2],[c3,c4]], b);
             if (r.ganador === 1) w1++;
             else if (r.ganador === 2) w2++;
             else emp++;
+          } catch (e) {
+            fallos++;
+            // continúa con la siguiente iteración
+            if (fallos < 3) console.warn('Iteración con error:', e);
           }
-          const p1 = (w1/n*100).toFixed(2);
-          const p2 = (w2/n*100).toFixed(2);
-          const pe = (emp/n*100).toFixed(2);
-          $('simu').textContent = `🧠 ${n} sims\nJugador 1: ${p1}%   |   Jugador 2: ${p2}%   |   Empates: ${pe}%`;
-        } catch (err) {
-          console.error(err);
-          alert('⚠️ Error en la simulación. Revisa la consola (F12).');
         }
+        const tot = w1 + w2 + emp;
+        if (tot === 0) {
+          $('simu').textContent = '';
+          $('err').textContent = '⚠️ No se pudieron evaluar manos en la simulación. Revisa que el CDN no esté bloqueado.';
+          return;
+        }
+        const p1 = (w1/tot*100).toFixed(2);
+        const p2 = (w2/tot*100).toFixed(2);
+        const pe = (emp/tot*100).toFixed(2);
+        $('simu').textContent = `🧠 ${tot} sims válidas (fallos: ${fallos})\nJugador 1: ${p1}%   |   Jugador 2: ${p2}%   |   Empates: ${pe}%`;
+        $('err').textContent = fallos ? '⚠️ Algunas iteraciones fallaron (ver consola).' : '';
       };
 
       // Limpiar
@@ -243,6 +261,7 @@
           .forEach(id => $(id).src = '');
         $('resultado').textContent = '';
         $('simu').textContent = '';
+        $('err').textContent = '';
         board = [];
       };
     });
