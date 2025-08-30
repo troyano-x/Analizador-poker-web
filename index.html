@@ -5,162 +5,192 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Analizador de Poker – Web</title>
   <style>
-  /* ===== Mesa de póker (tema) ===== */
-  :root{
-    --felt-1:#1f7a4a;   /* verde medio */
-    --felt-2:#0f5a37;   /* verde oscuro */
-    --felt-3:#063b25;   /* verde muy oscuro (sombras) */
-    --wood-1:#7b4b2a;   /* café claro */
-    --wood-2:#5c361d;   /* café medio */
-    --wood-3:#3d2414;   /* café oscuro */
-    --ink:#ffffff;      /* texto sobre el fieltro */
-    --ink-dim:#e8f3ed;  /* texto secundario */
-    --line:#cfe9df;     /* bordes suaves */
-  }
+    /* ===== Mesa de póker (tema) + diseño responsivo ===== */
+    :root{
+      /* Escalado fluido */
+      --cardW: clamp(56px, 9.5vw, 96px);
+      --radius: clamp(28px, 5vw, 48px);
+      --pad: clamp(14px, 3.2vw, 26px);
 
-  /* Fondo general, un verde muy oscuro */
-  body{
-    background: radial-gradient(1200px 700px at 50% -10%, #0a3a28 0%, #042218 60%, #031912 100%);
-    margin: 16px;
-    font-family: system-ui, Arial, sans-serif;
-    color: var(--ink);
-  }
+      /* Colores */
+      --felt-1:#1f7a4a;  --felt-2:#0f5a37;  --felt-3:#063b25;
+      --wood-1:#7b4b2a;  --wood-2:#5c361d;  --wood-3:#3d2414;
+      --ink:#ffffff;     --ink-dim:#e8f3ed; --line:#cfe9df;
+    }
 
-  /* Contenedor con forma de mesa */
-  .table{
-    max-width: 1000px;
-    margin: 24px auto;
-    padding: 24px;
-    border-radius: 48px;
-    position: relative;
+    /* Fondo general */
+    body{
+      margin: 0;
+      font-family: system-ui, Arial, sans-serif;
+      color: var(--ink);
+      background: radial-gradient(1200px 700px at 50% -10%, #0a3a28 0%, #042218 60%, #031912 100%);
+    }
 
-    /* Fieltro con degradados y leve viñeta */
-    background:
-      radial-gradient(1200px 700px at 50% 20%, rgba(255,255,255,.10), rgba(0,0,0,.18) 70%) ,
-      radial-gradient(600px 400px at 30% 30%, rgba(255,255,255,.06), transparent 70%),
-      radial-gradient(600px 400px at 70% 70%, rgba(255,255,255,.05), transparent 70%),
-      radial-gradient(circle at 50% 50%, var(--felt-1) 0%, var(--felt-2) 55%, var(--felt-3) 100%);
-    box-shadow:
-      0 18px 40px rgba(0,0,0,.55),
-      inset 0 2px 6px rgba(255,255,255,.10),
-      inset 0 -6px 18px rgba(0,0,0,.45);
-  }
+    .page{ padding: clamp(8px, 2.5vw, 20px); }
 
-  /* Barandal de madera alrededor */
-  .table::before{
-    content:"";
-    position:absolute;
-    inset:-26px;
-    border-radius: 64px;
-    background:
-      linear-gradient(180deg, var(--wood-1), var(--wood-2) 45%, var(--wood-2) 60%, var(--wood-3));
-    box-shadow:
-      0 20px 45px rgba(0,0,0,.6),
-      inset 0 2px 3px rgba(255,255,255,.25),
-      inset 0 -3px 6px rgba(0,0,0,.55);
-    z-index:-1;
-  }
+    /* Contenedor con forma de mesa */
+    .table{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: var(--pad);
+      border-radius: calc(var(--radius) + 16px);
+      position: relative;
+      background:
+        radial-gradient(1200px 700px at 50% 20%, rgba(255,255,255,.10), rgba(0,0,0,.18) 70%) ,
+        radial-gradient(600px 400px at 30% 30%, rgba(255,255,255,.06), transparent 70%),
+        radial-gradient(600px 400px at 70% 70%, rgba(255,255,255,.05), transparent 70%),
+        radial-gradient(circle at 50% 50%, var(--felt-1) 0%, var(--felt-2) 55%, var(--felt-3) 100%);
+      box-shadow:
+        0 18px 40px rgba(0,0,0,.55),
+        inset 0 2px 6px rgba(255,255,255,.10),
+        inset 0 -6px 18px rgba(0,0,0,.45);
+    }
+    .table::before{
+      content:"";
+      position:absolute;
+      inset: calc(var(--pad) * -0.9);
+      border-radius: calc(var(--radius) + 28px);
+      background: linear-gradient(180deg, var(--wood-1), var(--wood-2) 45%, var(--wood-2) 60%, var(--wood-3));
+      box-shadow:
+        0 20px 45px rgba(0,0,0,.6),
+        inset 0 2px 3px rgba(255,255,255,.25),
+        inset 0 -3px 6px rgba(0,0,0,.55);
+      z-index:-1;
+    }
 
-  h1{ font-size:22px; margin: 4px 0 14px; color: var(--ink); }
-  label{ font-weight: 700; color: var(--ink-dim); }
+    /* Tipografía fluida */
+    h1{ font-size: clamp(22px, 3.2vw, 34px); margin: 0 0 14px; }
+    h2{ font-size: clamp(18px, 2.4vw, 22px); margin: 6px 0; color: var(--ink-dim); }
+    h3{ font-size: clamp(16px, 2.1vw, 20px); margin: 10px 0; color: var(--ink-dim); }
+    label{ font-weight: 700; color: var(--ink-dim); }
 
-  .row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .col{ display:flex; flex-direction:column; gap:6px; }
+    /* Layouts */
+    .grid-players{
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(10px, 2vw, 22px);
+    }
+    @media (max-width: 720px){
+      .grid-players{ grid-template-columns: 1fr; }
+    }
 
-  select, input[type="number"]{
-    padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.25);
-    background: rgba(255,255,255,.08); color: var(--ink);
-    outline:none;
-  }
-  select:focus, input[type="number"]:focus{ border-color: var(--line); box-shadow: 0 0 0 3px rgba(207,233,223,.15); }
+    .row{ display:flex; gap: 10px; align-items:center; flex-wrap:wrap; }
+    .col{ display:flex; flex-direction:column; gap: 8px; }
 
-  .btn{
-    padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.25);
-    background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
-    color: var(--ink); cursor:pointer;
-    box-shadow: 0 4px 10px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.15);
-  }
-  .btn:hover{ filter: brightness(1.06); }
-  .btn:active{ transform: translateY(1px); }
+    /* Controles */
+    select, input[type="number"]{
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.25);
+      background: rgba(255,255,255,.08);
+      color: var(--ink);
+      outline: none;
+      min-width: clamp(110px, 28vw, 160px);
+    }
+    select:focus, input[type="number"]:focus{
+      border-color: var(--line);
+      box-shadow: 0 0 0 3px rgba(207,233,223,.15);
+    }
+    input[type="number"]{ width: clamp(110px, 26vw, 150px); }
 
-  .card{
-    width:60px; height:90px; object-fit:contain; border-radius:10px;
-    border:1px solid rgba(255,255,255,.35);
-    box-shadow: 0 6px 12px rgba(0,0,0,.35);
-    background: rgba(255,255,255,.08);
-  }
+    .btn{
+      padding: 12px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.25);
+      background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
+      color: var(--ink);
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.15);
+      touch-action: manipulation;
+    }
+    .btn:hover{ filter: brightness(1.06); }
+    .btn:active{ transform: translateY(1px); }
 
-  .out{ white-space:pre-line; font-weight:600; margin-top:6px; }
-</style>
+    /* Cartas escalables */
+    .card{
+      width: var(--cardW);
+      height: calc(var(--cardW) * 1.5);
+      object-fit: contain;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.35);
+      box-shadow: 0 6px 12px rgba(0,0,0,.35);
+      background: rgba(255,255,255,.08);
+    }
+    .cards-row{ display:flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 
+    .out{ white-space: pre-line; font-weight: 600; margin-top: 8px; }
+  </style>
 </head>
 <body>
-<div class="table">
-  
-  <h1>Analizador de Poker – Web</h1>
+  <div class="page">
+    <div class="table">
+      <h1>Analizador de Poker – Web</h1>
 
-  <div class="row">
-    <div class="col">
-      <label>Jugador 1</label>
-      <div class="row">
-        <select id="j1c1"></select>
-        <select id="j1c2"></select>
+      <section class="grid-players">
+        <div class="col">
+          <h2>Jugador 1</h2>
+          <div class="row">
+            <select id="j1c1"></select>
+            <select id="j1c2"></select>
+          </div>
+          <div class="cards-row">
+            <img id="img_j1c1" class="card" />
+            <img id="img_j1c2" class="card" />
+          </div>
+        </div>
+
+        <div class="col">
+          <h2>Jugador 2</h2>
+          <div class="row">
+            <select id="j2c1"></select>
+            <select id="j2c2"></select>
+          </div>
+          <div class="cards-row">
+            <img id="img_j2c1" class="card" />
+            <img id="img_j2c2" class="card" />
+          </div>
+        </div>
+      </section>
+
+      <div class="row" style="margin: clamp(10px,2vw,18px) 0;">
+        <button class="btn" id="btnMostrar">Mostrar manos</button>
+        <button class="btn" id="btnBoardEval">Generar board + Evaluar</button>
+        <button class="btn" id="btnLimpiar">Limpiar</button>
       </div>
-      <div class="row">
-        <img id="img_j1c1" class="card" />
-        <img id="img_j1c2" class="card" />
-      </div>
+
+      <section>
+        <h3>Board (Flop, Turn, River)</h3>
+        <div class="cards-row">
+          <img id="board0" class="card" />
+          <img id="board1" class="card" />
+          <img id="board2" class="card" />
+          <img id="board3" class="card" />
+          <img id="board4" class="card" />
+        </div>
+      </section>
+
+      <div id="resultado" class="out"></div>
+
+      <section class="row" style="margin-top: clamp(8px,2vw,12px);">
+        <label>Simular (p.e. 1000):</label>
+        <input id="sims" type="number" value="1000" min="1" />
+        <button class="btn" id="btnSimular">Simular probabilidades</button>
+      </section>
+      <div id="simu" class="out"></div>
     </div>
-
-    <div class="col">
-      <label>Jugador 2</label>
-      <div class="row">
-        <select id="j2c1"></select>
-        <select id="j2c2"></select>
-      </div>
-      <div class="row">
-        <img id="img_j2c1" class="card" />
-        <img id="img_j2c2" class="card" />
-      </div>
-    </div>
   </div>
-
-  <div class="row" style="margin:12px 0;">
-    <button class="btn" id="btnMostrar">Mostrar manos</button>
-    <button class="btn" id="btnBoardEval">Generar board + Evaluar</button>
-    <button class="btn" id="btnLimpiar">Limpiar</button>
-  </div>
-
-  <div class="col">
-    <label>Board (Flop, Turn, River)</label>
-    <div class="board">
-      <img id="board0" class="card" />
-      <img id="board1" class="card" />
-      <img id="board2" class="card" />
-      <img id="board3" class="card" />
-      <img id="board4" class="card" />
-    </div>
-  </div>
-
-  <div id="resultado" class="out"></div>
-
-  <div class="row" style="margin-top:12px;">
-    <label>Simular (p.e. 1000):</label>
-    <input id="sims" type="number" value="1000" min="1" />
-    <button class="btn" id="btnSimular">Simular probabilidades</button>
-  </div>
-  <div id="simu" class="out"></div>
 
   <script>
-    // ====== Config / utilidades ======
+    /* ====== LÓGICA: evaluador nativo + UI ====== */
     const valores = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
-    const palos = ['C','D','P','T']; // C=Corazones, D=Diamantes, P=Picas, T=Tréboles (nombres de imagen)
+    const palos = ['C','D','P','T'];
     const cartas = []; for (const v of valores) for (const p of palos) cartas.push(v+p);
     const nombrePNG = (code) => `Cartas/${code}.png`;
     const $ = (id) => document.getElementById(id);
 
     function llenarSelect(sel){
-      sel.innerHTML = '<option value="">Carta</option>' + cartas.map(c=>`<option value="${c}">${c}</option>`).join('');
+      sel.innerHTML = '<option value="">Carta</option>' +
+        cartas.map(c=>`<option value="${c}">${c}</option>`).join('');
     }
     function mostrarCarta(code, img){ img.src = code ? nombrePNG(code) : ''; }
     function validar(cuatro){
@@ -174,7 +204,7 @@
       return res;
     }
 
-    // ====== Evaluador Texas Hold'em (7 cartas -> mejor 5) ======
+    // --- Evaluador Texas Hold'em (7 -> mejor 5) ---
     const valorA = (v) => v==='A'?14 : v==='K'?13 : v==='Q'?12 : v==='J'?11 : parseInt(v,10);
     function parse(code){ return { r: valorA(code.slice(0,-1)), s: code.slice(-1) }; }
     function uniqueDesc(arr){ return [...new Set(arr)].sort((a,b)=>b-a); }
@@ -190,7 +220,6 @@
       }
       return best;
     }
-
     function best5of7(codes){
       const cards = codes.map(parse);
       const ranks = cards.map(c=>c.r).sort((a,b)=>b-a);
@@ -200,7 +229,6 @@
         if (!suit.has(c.s)) suit.set(c.s, []);
         suit.get(c.s).push(c.r);
       }
-
       // Flush / Straight Flush
       let flushSuit=null, flushRanks=[];
       for (const [s, arr] of suit){
@@ -210,11 +238,9 @@
         const sfHigh = highestStraight(flushRanks);
         if (sfHigh) return { cat:8, tiebreak:[sfHigh], descr:'Escalera color' };
       }
-
       const groups = {4:[],3:[],2:[],1:[]};
       for (const [r, c] of cnt) groups[c].push(r);
       for (const k of [4,3,2,1]) groups[k].sort((a,b)=>b-a);
-
       if (groups[4].length){
         const quad = groups[4][0];
         const kick = uniqueDesc(ranks.filter(r=>r!==quad))[0];
@@ -248,7 +274,6 @@
       }
       return { cat:0, tiebreak: uniqueDesc(ranks).slice(0,5), descr:'Carta alta' };
     }
-
     function compareHands(a,b){
       if (a.cat !== b.cat) return a.cat - b.cat;
       const n = Math.max(a.tiebreak.length, b.tiebreak.length);
@@ -258,7 +283,6 @@
       }
       return 0;
     }
-
     function evaluar(manos, board){
       const h1 = best5of7([...manos[0], ...board]);
       const h2 = best5of7([...manos[1], ...board]);
@@ -268,7 +292,7 @@
       return { ganador:0, jugada1:h1.descr, jugada2:h2.descr };
     }
 
-    // ====== UI ======
+    // --- UI ---
     document.addEventListener('DOMContentLoaded', () => {
       ['j1c1','j1c2','j2c1','j2c2'].forEach(id => llenarSelect($(id)));
 
@@ -285,7 +309,7 @@
         if (!validar([c1,c2,c3,c4])) return;
         const usadas = new Set([c1,c2,c3,c4]);
         board = barajarBoard(usadas);
-        board.forEach((c,i)=>mostrarCarta(c,$('board'+i)));
+        [0,1,2,3,4].forEach(i => mostrarCarta(board[i], $('board'+i)));
         const r = evaluar([[c1,c2],[c3,c4]], board);
         $('resultado').textContent =
           r.ganador===1 ? `🏆 Gana Jugador 1 (${r.jugada1})` :
