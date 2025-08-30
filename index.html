@@ -1,36 +1,114 @@
-name: Build Android APK
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Analizador de Poker – Web</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 16px; }
+    .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .col { display: flex; flex-direction: column; gap: 6px; }
+    .card { width: 60px; height: 90px; object-fit: contain; border-radius: 6px; border: 1px solid #ddd; }
+    .btn { padding: 10px 14px; border: 1px solid #ccc; border-radius: 8px; background: #f6f6f6; cursor: pointer; }
+    .btn:hover { background: #eee; }
+    h1 { font-size: 20px; margin: 8px 0 12px; }
+    label { font-weight: 600; }
+    .out { white-space: pre-line; font-weight: 600; margin-top: 6px; }
+    .board { display: flex; gap: 8px; align-items: center; }
+    select { padding: 6px 8px; border-radius: 8px; border: 1px solid #ccc; }
+    input[type="number"] { width: 110px; padding: 6px 8px; border-radius: 8px; border: 1px solid #ccc; }
+  </style>
+  <script src="https://unpkg.com/pokersolver@2.1.3/dist/pokersolver.min.js"></script>
+</head>
+<body>
+  <h1>Analizador de Poker – Web</h1>
 
-on:
-  push:
-    branches: [ main, master ]
-  workflow_dispatch:
+  <div class="row">
+    <div class="col">
+      <label>Jugador 1</label>
+      <div class="row">
+        <select id="j1c1"></select>
+        <select id="j1c2"></select>
+      </div>
+      <div class="row">
+        <img id="img_j1c1" class="card" />
+        <img id="img_j1c2" class="card" />
+      </div>
+    </div>
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    <div class="col">
+      <label>Jugador 2</label>
+      <div class="row">
+        <select id="j2c1"></select>
+        <select id="j2c2"></select>
+      </div>
+      <div class="row">
+        <img id="img_j2c1" class="card" />
+        <img id="img_j2c2" class="card" />
+      </div>
+    </div>
+  </div>
 
-      - name: Cache .buildozer
-        uses: actions/cache@v4
-        with:
-          path: ~/.buildozer
-          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
-          restore-keys: |
-            buildozer-${{ runner.os }}-
+  <div class="row" style="margin:12px 0;">
+    <button class="btn" id="btnMostrar">Mostrar manos</button>
+    <button class="btn" id="btnBoardEval">Generar board + Evaluar</button>
+    <button class="btn" id="btnLimpiar">Limpiar</button>
+  </div>
 
-      - name: Build with kivy/buildozer (Docker)
-        run: |
-          docker run --rm \
-            -v "$PWD":/home/user/app \
-            -v "$HOME/.buildozer":/home/user/.buildozer \
-            -w /home/user/app \
-            kivy/buildozer \
-            buildozer -v android debug
+  <div class="col">
+    <label>Board (Flop, Turn, River)</label>
+    <div class="board">
+      <img id="board0" class="card" />
+      <img id="board1" class="card" />
+      <img id="board2" class="card" />
+      <img id="board3" class="card" />
+      <img id="board4" class="card" />
+    </div>
+  </div>
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: analizador_poker-apk
-          path: bin/*.apk
+  <div id="resultado" class="out"></div>
+
+  <div class="row" style="margin-top:12px;">
+    <label>Simular (p.e. 1000):</label>
+    <input id="sims" type="number" value="1000" min="1" />
+    <button class="btn" id="btnSimular">Simular probabilidades</button>
+  </div>
+  <div id="simu" class="out"></div>
+
+  <script>
+    const valores = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+    const palos = ['C','D','P','T'];
+    const cartas = [];
+    for (const v of valores) for (const p of palos) cartas.push(v+p);
+
+    const paloToSolver = { C:'h', D:'d', P:'s', T:'c' };
+    const nombrePNG = (code) => `Cartas/${code}.png`;
+
+    const traductor = {
+      'High Card': 'Carta alta','Pair': 'Par','Two Pair': 'Doble par','Three of a Kind': 'Trío',
+      'Straight': 'Escalera','Flush': 'Color','Full House': 'Full','Four of a Kind': 'Póker',
+      'Straight Flush': 'Escalera color','Royal Flush': 'Escalera real'
+    };
+
+    const $ = (id) => document.getElementById(id);
+    function llenarSelect(sel){ sel.innerHTML = '<option value="">Carta</option>'+cartas.map(c=>`<option value="${c}">${c}</option>`).join(''); }
+    function mostrarCarta(code,img){ img.src = code ? nombrePNG(code) : ''; }
+    function convertirASolver(code){ const v=code.slice(0,-1), p=code.slice(-1); return (v==='10'?'T':v)+paloToSolver[p]; }
+    function validar(a){ if(a.some(c=>!c)){alert('❌ Debes seleccionar las 4 cartas');return false;} if(new Set(a).size!==a.length){alert('❌ No se pueden repetir cartas');return false;} return true; }
+    function barajarBoard(usadas){ const disp=cartas.filter(c=>!usadas.has(c)); const res=[]; for(let i=0;i<5;i++){ const k=Math.floor(Math.random()*disp.length); res.push(disp[k]); disp.splice(k,1);} return res; }
+    function evaluar(manos,board){ const H=window.pokersolver.Hand; const h1=H.solve(manos[0].map(convertirASolver),board.map(convertirASolver)); const h2=H.solve(manos[1].map(convertirASolver),board.map(convertirASolver)); if(h1.rank<h2.rank)return{g:1,j1:h1.descr,j2:h2.descr}; if(h2.rank<h1.rank)return{g:2,j1:h1.descr,j2:h2.descr}; return{g:0,j1:h1.descr,j2:h2.descr}; }
+    function cat(d){ return (d.split(',')[0]||'').trim(); }
+
+    ['j1c1','j1c2','j2c1','j2c2'].forEach(id=>llenarSelect($(id)));
+
+    $('btnMostrar').onclick=()=>{ const c1=$('j1c1').value,c2=$('j1c2').value,c3=$('j2c1').value,c4=$('j2c2').value; if(!validar([c1,c2,c3,c4]))return; mostrarCarta(c1,$('img_j1c1')); mostrarCarta(c2,$('img_j1c2')); mostrarCarta(c3,$('img_j2c1')); mostrarCarta(c4,$('img_j2c2')); };
+
+    let board=[];
+    $('btnBoardEval').onclick=()=>{ const c1=$('j1c1').value,c2=$('j1c2').value,c3=$('j2c1').value,c4=$('j2c2').value; if(!validar([c1,c2,c3,c4]))return; const usadas=new Set([c1,c2,c3,c4]); board=barajarBoard(usadas); board.forEach((c,i)=>mostrarCarta(c,$('board'+i))); const r=evaluar([[c1,c2],[c3,c4]],board); $('resultado').textContent = r.g===1?`🏆 Gana Jugador 1 (${traductor[cat(r.j1)]||cat(r.j1)})`: r.g===2?`🏆 Gana Jugador 2 (${traductor[cat(r.j2)]||cat(r.j2)})`:`🤝 Empate (${traductor[cat(r.j1)]||cat(r.j1)})`; };
+
+    $('btnSimular').onclick=()=>{ const c1=$('j1c1').value,c2=$('j1c2').value,c3=$('j2c1').value,c4=$('j2c2').value; if(!validar([c1,c2,c3,c4]))return; const n=Math.max(1,parseInt($('sims').value||'1000',10)); const usadasBase=new Set([c1,c2,c3,c4]); let w1=0,w2=0,emp=0; for(let k=0;k<n;k++){ const b=barajarBoard(usadasBase); const r=evaluar([[c1,c2],[c3,c4]],b); if(r.g===1)w1++; else if(r.g===2)w2++; else emp++; } const p1=(w1/n*100).toFixed(2),p2=(w2/n*100).toFixed(2),pe=(emp/n*100).toFixed(2); $('simu').textContent=`🧠 ${n} sims\nJugador 1: ${p1}%   |   Jugador 2: ${p2}%   |   Empates: ${pe}%`; };
+
+    $('btnLimpiar').onclick=()=>{ ['j1c1','j1c2','j2c1','j2c2'].forEach(id=>$(id).value=''); ['img_j1c1','img_j1c2','img_j2c1','img_j2c2','board0','board1','board2','board3','board4'].forEach(id=>$(id).src=''); $('resultado').textContent=''; $('simu').textContent=''; board=[]; };
+  </script>
+</body>
+</html>
