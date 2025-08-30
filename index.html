@@ -129,23 +129,26 @@
     return res;
   }
 
-  // === Evaluación con 7 cartas (mano + board) ===
-  function resolver7(hole, board) {
-    // pokersolver: Hand.solve([...hole, ...board])  -> 7 cartas
-    const H = window.pokersolver.Hand;
-    const cards7 = [...hole, ...board].map(convertirASolver);
-    return H.solve(cards7);
-  }
+  <script>
+// === Evaluación con 7 cartas (mano + board) ===
+function resolver7(hole, board) {
+  // pokersolver: Hand.solve([...7 cartas...])
+  const H = (window.pokersolver && window.pokersolver.Hand);
+  if (!H) throw new Error('pokersolver no cargó');
+  const seven = [...hole, ...board].map(convertirASolver);
+  return H.solve(seven);
+}
 
-  function evaluar(manos, board) {
-    const h1 = resolver7(manos[0], board);
-    const h2 = resolver7(manos[1], board);
-    // winners devuelve array de ganadores (por si hay empate exacto)
-    const winners = window.pokersolver.Hand.winners([h1, h2]);
-    if (winners.length === 2) return { ganador: 0, jugada1: h1.descr, jugada2: h2.descr };
-    if (winners[0] === h1) return { ganador: 1, jugada1: h1.descr, jugada2: h2.descr };
-    return { ganador: 2, jugada1: h1.descr, jugada2: h2.descr };
-  }
+function evaluar(manos, board) {
+  // Comparar por rank (número menor = mejor mano)
+  const h1 = resolver7(manos[0], board);
+  const h2 = resolver7(manos[1], board);
+  if (h1.rank < h2.rank) return { ganador: 1, jugada1: h1.descr, jugada2: h2.descr };
+  if (h2.rank < h1.rank) return { ganador: 2, jugada1: h2.descr, jugada2: h1.descr };
+  // Empate exacto
+  return { ganador: 0, jugada1: h1.descr, jugada2: h2.descr };
+}
+
 
   function traducirCategoria(descr) {
     const cat = (descr.split(',')[0] || '').trim();
