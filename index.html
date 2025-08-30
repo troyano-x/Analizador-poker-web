@@ -5,23 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Poker Juanito – Analizador</title>
   <style>
-    /* ===== Mesa de póker (tema) + diseño responsivo ===== */
     :root{
-      /* Escalado fluido */
-      --cardW: clamp(56px, 9vw, 100px);          /* tamaño de los slots/board */
-      --pickW: clamp(40px, 11.5vw, 72px);        /* tamaño de cartas en el selector */
-      --radius: clamp(28px, 5vw, 52px);
-      --pad: clamp(14px, 3.2vw, 26px);
-
-      /* Colores */
+      --cardW: clamp(52px, 8.4vw, 100px);         /* slots/board */
+      --pickW: clamp(38px, 10.7vw, 70px);         /* cartas en el selector */
+      --radius: clamp(26px, 5vw, 52px);
+      --pad: clamp(12px, 3.2vw, 26px);
       --felt-1:#1f7a4a;  --felt-2:#0f5a37;  --felt-3:#063b25;
       --wood-1:#875431;  --wood-2:#6a3f23;  --wood-3:#51311a;  --wood-4:#3b2414;
-      --ink:#ffffff;     --ink-dim:#e8f3ed; --line:#cfe9df; --gold:#eacb7b;
+      --ink:#ffffff;     --ink-dim:#e8f3ed; --gold:#eacb7b;
     }
-
-    /* Fondo madera de tablones */
+    /* Fondo madera */
     body{
-      margin: 0; font-family: system-ui, Arial, sans-serif; color: var(--ink);
+      margin:0; font-family: system-ui, Arial, sans-serif; color:var(--ink);
       background:
         repeating-linear-gradient( 90deg,
           #784d2c 0px, #7f5230 60px, #774a28 60px, #6d4324 120px ),
@@ -29,12 +24,12 @@
     }
     .page{ padding: clamp(10px,2.6vw,22px); }
 
-    /* Tapete + barandal */
+    /* Tapete + barandal + línea de apuesta */
     .table{
-      max-width: 1100px; margin: 0 auto; padding: var(--pad);
-      border-radius: calc(var(--radius) + 18px); position: relative;
+      max-width: 1100px; margin:0 auto; padding:var(--pad);
+      border-radius: calc(var(--radius) + 18px); position:relative;
       background:
-        radial-gradient(1200px 700px at 50% 20%, rgba(255,255,255,.12), rgba(0,0,0,.18) 70%) ,
+        radial-gradient(1200px 700px at 50% 20%, rgba(255,255,255,.12), rgba(0,0,0,.18) 70%),
         radial-gradient(600px 400px at 30% 30%, rgba(255,255,255,.05), transparent 70%),
         radial-gradient(600px 400px at 70% 70%, rgba(255,255,255,.05), transparent 70%),
         radial-gradient(circle at 50% 50%, var(--felt-1) 0%, var(--felt-2) 55%, var(--felt-3) 100%);
@@ -59,109 +54,104 @@
     /* Logo */
     .logo{
       position:absolute; left: clamp(14px,2vw,24px); top: clamp(10px,1.8vw,18px);
-      display:flex; align-items:center; gap:8px; padding: 6px 12px; border-radius: 999px;
+      display:flex; align-items:center; gap:8px; padding: 6px 12px; border-radius:999px;
       background: radial-gradient(circle at 30% 20%, #ef4444 0%, #9a1b1b 70%);
       color:#fff; font-weight:800; letter-spacing:.4px; text-transform:uppercase;
       box-shadow: 0 6px 14px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.25);
     }
     .logo .chip{
-      width: clamp(16px,2.6vw,22px); height: clamp(16px,2.6vw,22px); border-radius: 50%;
+      width: clamp(16px,2.6vw,22px); height: clamp(16px,2.6vw,22px); border-radius:50%;
       background: radial-gradient(circle at 35% 35%, #fff 0%, #ffd86a 30%, #a6761a 70%);
       box-shadow: inset 0 1px 0 rgba(255,255,255,.6), inset 0 -2px 4px rgba(0,0,0,.35);
     }
 
-    /* Texto fluido */
-    h1{ font-size: clamp(22px, 3.2vw, 34px); margin: 0 0 16px; padding-left: clamp(0px, 8vw, 120px); }
-    h2{ font-size: clamp(18px, 2.4vw, 22px); margin: 6px 0; color: var(--ink-dim); }
-    h3{ font-size: clamp(16px, 2.1vw, 20px); margin: 10px 0; color: var(--ink-dim); }
+    /* Texto */
+    h1{ font-size: clamp(22px, 3.2vw, 34px); margin:0 0 16px; padding-left: clamp(0px, 8vw, 120px); }
+    h2{ font-size: clamp(18px, 2.4vw, 22px); margin: 6px 0; color:var(--ink-dim); }
+    h3{ font-size: clamp(16px, 2.1vw, 20px); margin: 10px 0; color:var(--ink-dim); }
 
-    /* Layout */
-    .grid-players{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: clamp(10px, 2vw, 22px); }
-    @media (max-width: 720px){ .grid-players{ grid-template-columns: 1fr; } }
-    .row{ display:flex; gap: 10px; align-items:center; flex-wrap:wrap; }
-    .col{ display:flex; flex-direction:column; gap: 12px; }
+    /* === Layout: jugadores en horizontal SIEMPRE === */
+    .grid-players{
+      display:grid; grid-template-columns: 1fr 1fr; gap: clamp(10px, 2vw, 22px);
+      align-items: start;
+    }
+    /* si la pantalla es muy estrecha, permitimos scroll horizontal suave */
+    .grid-wrap{ overflow-x:auto; scrollbar-width: thin; }
+    .grid-wrap::-webkit-scrollbar{ height:8px; }
+    .grid-wrap::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.2); border-radius:8px; }
+
+    .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .col{ display:flex; flex-direction:column; gap:12px; }
 
     /* Botones */
     .btn{
       padding: 12px 16px; border-radius: 14px; border:1px solid rgba(255,255,255,.25);
       background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
-      color: var(--ink); cursor: pointer;
+      color:var(--ink); cursor:pointer;
       box-shadow: 0 4px 10px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.15);
       touch-action: manipulation;
     }
-    .btn:hover{ filter: brightness(1.06); }
+    .btn:hover{ filter:brightness(1.06); }
     .btn:active{ transform: translateY(1px); }
     .btn-secondary{ background: rgba(255,255,255,.08); }
 
-    /* ===== Slots (selección y vista en el mismo cuadro) ===== */
+    /* Slots (el mismo cuadro sirve para elegir y mostrar la carta) */
     .slot{
       width: var(--cardW);
       height: calc(var(--cardW) * 1.5);
-      border-radius: 12px;
-      border: 1px dashed rgba(255,255,255,.38);
-      background: rgba(255,255,255,.07);
-      color: var(--ink-dim);
-      display: grid; place-items: center;
-      font-weight: 800; cursor: pointer;
+      border-radius: 12px; border:1px dashed rgba(255,255,255,.38);
+      background: rgba(255,255,255,.07); color:#eaf3ed;
+      display:grid; place-items:center; font-weight:800; cursor:pointer;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 6px 12px rgba(0,0,0,.25);
-      position: relative; overflow: hidden;
-      text-shadow: 0 1px 0 rgba(0,0,0,.35);
+      position:relative; overflow:hidden; text-shadow:0 1px 0 rgba(0,0,0,.35);
     }
     .slot:hover{ background: rgba(255,255,255,.10); }
-    .slot img{
-      display: none;
-      width: 100%; height: 100%; object-fit: contain;
-      position: absolute; inset: 0;
-      filter: drop-shadow(0 6px 12px rgba(0,0,0,.35));
-    }
+    .slot img{ display:none; width:100%; height:100%; object-fit:contain; position:absolute; inset:0;
+               filter: drop-shadow(0 6px 12px rgba(0,0,0,.35)); }
     .slot.filled{ border-style: solid; border-color: rgba(255,255,255,.38); background: rgba(255,255,255,.08); }
-    .slot.filled span{ visibility: hidden; }
-    .slot.filled img{ display: block; }
+    .slot.filled span{ visibility:hidden; }
+    .slot.filled img{ display:block; }
 
-    /* Cartas del board */
-    .card{
-      width: var(--cardW); height: calc(var(--cardW) * 1.5); object-fit: contain;
-      border-radius: 10px; border: 1px solid rgba(255,255,255,.35);
-      box-shadow: 0 6px 12px rgba(0,0,0,.35); background: rgba(255,255,255,.08);
-    }
-    .cards-row{ display:flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .card{ width:var(--cardW); height:calc(var(--cardW)*1.5); object-fit:contain;
+           border-radius:10px; border:1px solid rgba(255,255,255,.35);
+           box-shadow: 0 6px 12px rgba(0,0,0,.35); background:rgba(255,255,255,.08); }
+    .cards-row{ display:flex; gap:10px; align-items:center; } /* board en horizontal */
 
-    /* ===== Modal selector de cartas (compacto) ===== */
-    .picker-backdrop{
-      position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none; z-index: 10;
-      align-items: center; justify-content: center; padding: 10px;
-    }
+    /* ===== Modal selector compacto ===== */
+    .picker-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; z-index:10;
+                      align-items:center; justify-content:center; padding:10px; }
     .picker-backdrop.open{ display:flex; }
     .picker{
-      width: min(1000px, 100%); max-height: 92vh; overflow: auto; border-radius: 14px;
+      width:min(1000px,100%); max-height:92vh; overflow:auto; border-radius:14px;
       background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
-      border: 1px solid rgba(255,255,255,.25); box-shadow: 0 16px 40px rgba(0,0,0,.6);
-      padding: 10px;
+      border:1px solid rgba(255,255,255,.25); box-shadow:0 16px 40px rgba(0,0,0,.6);
+      padding:10px;
     }
-    .picker-header{ display:flex; align-items:center; justify-content: space-between; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+    .picker-header{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
     .picker-title{ font-weight:700; }
-    .picker-hint{ font-size: .9em; opacity:.9; }
-    .picker-grid{
-      display:grid;
-      grid-template-columns: repeat(auto-fit, minmax(var(--pickW), 1fr));
-      gap: 6px;
-    }
-    .pick-btn{
-      border: 1px solid rgba(255,255,255,.35); border-radius: 10px; background: rgba(255,255,255,.08);
-      padding: 0; cursor:pointer; display:block; box-shadow: 0 4px 10px rgba(0,0,0,.3);
-    }
-    .pick-btn img{ width: 100%; height: calc(var(--pickW) * 1.5); object-fit: contain; display:block; border-radius: 10px; }
-    .pick-btn[disabled]{ filter: grayscale(1) brightness(.7); cursor:not-allowed; opacity: .6; }
-    .picker-actions{ display:flex; gap:8px; justify-content:flex-end; margin-top: 8px; flex-wrap: wrap; }
+    .picker-hint{ font-size:.9em; opacity:.9; }
 
-    .search{
-      display:flex; align-items:center; gap:6px; flex: 1 1 240px;
-      border:1px solid rgba(255,255,255,.25); border-radius:12px; padding:8px 10px;
-      background: rgba(255,255,255,.08); color: var(--ink);
+    .suits{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+    .suit-btn{
+      border:1px solid rgba(255,255,255,.25); border-radius:999px; padding:6px 10px;
+      background: rgba(255,255,255,.08); cursor:pointer;
     }
-    .search input{
-      flex:1; min-width:120px; border:none; outline:none; background:transparent; color: var(--ink);
+    .suit-btn.active{ outline:2px solid var(--gold); }
+
+    .search{ display:flex; align-items:center; gap:6px; flex:1 1 240px;
+             border:1px solid rgba(255,255,255,.25); border-radius:12px; padding:8px 10px;
+             background: rgba(255,255,255,.08); color:var(--ink); }
+    .search input{ flex:1; min-width:120px; border:none; outline:none; background:transparent; color:var(--ink); }
+
+    .picker-grid{
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(var(--pickW), 1fr));
+      gap:6px;
     }
+    .pick-btn{ border:1px solid rgba(255,255,255,.35); border-radius:10px; background:rgba(255,255,255,.08);
+               padding:0; cursor:pointer; display:block; box-shadow:0 4px 10px rgba(0,0,0,.3); }
+    .pick-btn img{ width:100%; height:calc(var(--pickW) * 1.5); object-fit:contain; display:block; border-radius:10px; }
+    .pick-btn[disabled]{ filter:grayscale(1) brightness(.7); cursor:not-allowed; opacity:.6; }
+    .picker-actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; flex-wrap:wrap; }
   </style>
 </head>
 <body>
@@ -170,27 +160,30 @@
       <div class="logo"><span class="chip"></span> Poker Juanito</div>
       <h1>Analizador de Poker – Web</h1>
 
-      <section class="grid-players">
-        <div class="col">
-          <h2>Jugador 1</h2>
-          <div class="cards-row">
-            <button class="slot" data-slot="j1c1" title="Elegir carta J1-1"><span>Elegir</span><img alt=""></button>
-            <button class="slot" data-slot="j1c2" title="Elegir carta J1-2"><span>Elegir</span><img alt=""></button>
+      <div class="grid-wrap">
+        <section class="grid-players">
+          <div class="col">
+            <h2>Jugador 1</h2>
+            <div class="cards-row">
+              <button class="slot" data-slot="j1c1" title="Elegir carta J1-1"><span>Elegir</span><img alt=""></button>
+              <button class="slot" data-slot="j1c2" title="Elegir carta J1-2"><span>Elegir</span><img alt=""></button>
+            </div>
           </div>
-        </div>
 
-        <div class="col">
-          <h2>Jugador 2</h2>
-          <div class="cards-row">
-            <button class="slot" data-slot="j2c1" title="Elegir carta J2-1"><span>Elegir</span><img alt=""></button>
-            <button class="slot" data-slot="j2c2" title="Elegir carta J2-2"><span>Elegir</span><img alt=""></button>
+          <div class="col">
+            <h2>Jugador 2</h2>
+            <div class="cards-row">
+              <button class="slot" data-slot="j2c1" title="Elegir carta J2-1"><span>Elegir</span><img alt=""></button>
+              <button class="slot" data-slot="j2c2" title="Elegir carta J2-2"><span>Elegir</span><img alt=""></button>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
       <div class="row" style="margin: clamp(10px,2vw,18px) 0;">
-        <button class="btn" id="btnMostrar">Mostrar manos</button>
+        <button class="btn" id="btnSwap">Intercambiar manos</button>
         <button class="btn" id="btnBoardEval">Generar board + Evaluar</button>
+        <button class="btn" id="btnSimular">Simular probabilidades</button>
         <button class="btn" id="btnLimpiar">Limpiar</button>
       </div>
 
@@ -210,7 +203,6 @@
       <section class="row" style="margin-top: clamp(8px,2vw,12px);">
         <label>Simular (p.e. 1000):</label>
         <input id="sims" type="number" value="1000" min="1" />
-        <button class="btn" id="btnSimular">Simular probabilidades</button>
       </section>
       <div id="simu" class="out"></div>
 
@@ -220,13 +212,20 @@
     </div>
   </div>
 
-  <!-- ===== Modal selector de cartas ===== -->
+  <!-- ===== Modal selector ===== -->
   <div class="picker-backdrop" id="pickerBackdrop" aria-hidden="true">
     <div class="picker" role="dialog" aria-modal="true">
-      <div class="picker-header">
-        <div>
+      <div class="picker-header" style="gap:12px;">
+        <div style="min-width:220px">
           <div class="picker-title" id="pickerTitle">Elige una carta</div>
-          <div class="picker-hint">Busca por código (ej. <b>10D</b>, <b>AC</b>, <b>7P</b>). Palos: C=Corazones, D=Diamantes, P=Picas, T=Tréboles.</div>
+          <div class="picker-hint">Busca por código (ej. <b>10D</b>, <b>AC</b>, <b>7P</b>). Palos: ♥=C, ♦=D, ♠=P, ♣=T.</div>
+        </div>
+        <div class="suits" id="suits">
+          <button class="suit-btn active" data-suit="">Todas</button>
+          <button class="suit-btn" data-suit="C">♥</button>
+          <button class="suit-btn" data-suit="D">♦</button>
+          <button class="suit-btn" data-suit="P">♠</button>
+          <button class="suit-btn" data-suit="T">♣</button>
         </div>
         <div class="search">
           🔎 <input id="pickerSearch" type="text" placeholder="Buscar carta..." />
@@ -234,6 +233,7 @@
           <button class="btn btn-secondary" id="btnClosePicker" type="button">Cerrar</button>
         </div>
       </div>
+
       <div class="picker-grid" id="pickerGrid"></div>
       <div class="picker-actions">
         <button class="btn btn-secondary" id="btnClearSlot" type="button">Quitar carta</button>
@@ -245,88 +245,26 @@
   <script>
     /* ====== LÓGICA ====== */
     const valores = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
-    const palos = ['C','D','P','T'];
+    const palos = ['C','D','P','T']; // C=♥, D=♦, P=♠, T=♣
     const cartas = []; for (const v of valores) for (const p of palos) cartas.push(v+p);
-    const nombrePNG = (code) => `Cartas/${code}.png`;
-    const $ = (id) => document.getElementById(id);
+    const png = (code) => `Cartas/${code}.png`;
 
-    // ---- Slots: abrir selector al tocar (y también al tocar la propia carta) ----
+    // ---------- slots ----------
     document.querySelectorAll('.slot').forEach(btn=>{
       btn.addEventListener('click', ()=> openPicker(btn.dataset.slot));
       btn.querySelector('img').addEventListener('click', (e)=>{ e.stopPropagation(); openPicker(btn.dataset.slot); });
     });
 
-    // ---- Picker visual (con buscador) ----
-    let currentSlot = null;  // 'j1c1' | 'j1c2' | 'j2c1' | 'j2c2'
-    let tempChoice  = null;
-
-    function getUsedSet(exceptSlot=null){
-      const ids = ['j1c1','j1c2','j2c1','j2c2'].filter(id => id !== exceptSlot);
-      const set = new Set();
-      ids.forEach(id => { const v=$(id).value; if (v) set.add(v); });
-      return set;
-    }
-    function normalize(str){ return (str||'').toUpperCase().replace(/\s+/g,''); }
-
-    function renderPicker(){
-      const grid = $('pickerGrid'); grid.innerHTML = '';
-      const used = getUsedSet(currentSlot);
-      const q = normalize($('pickerSearch').value);
-      cartas.forEach(code=>{
-        if (q && !normalize(code).includes(q)) return;
-        const b = document.createElement('button');
-        b.className = 'pick-btn'; b.type = 'button'; b.title = code;
-        b.innerHTML = `<img src="${nombrePNG(code)}" alt="${code}">`;
-        if (used.has(code)) b.disabled = true;
-        if (tempChoice === code) b.style.outline = '3px solid #cfe9df';
-        b.addEventListener('click', ()=>{
-          tempChoice = code;
-          [...grid.querySelectorAll('.pick-btn')].forEach(x=>x.style.outline='none');
-          b.style.outline = '3px solid #cfe9df';
-        });
-        grid.appendChild(b);
-      });
-    }
-
-    function openPicker(slot){
-      currentSlot = slot;
-      tempChoice  = $(slot).value || null;
-      $('pickerTitle').textContent = `Elige una carta (${slot.toUpperCase()})`;
-      $('pickerSearch').value = '';
-      renderPicker();
-      $('pickerBackdrop').classList.add('open');
-      $('pickerBackdrop').setAttribute('aria-hidden','false');
-      setTimeout(()=> $('pickerSearch').focus(), 50);
-    }
-    function closePicker(){
-      $('pickerBackdrop').classList.remove('open');
-      $('pickerBackdrop').setAttribute('aria-hidden','true');
-      currentSlot = null; tempChoice = null;
-    }
-    $('pickerSearch').addEventListener('input', renderPicker);
-    $('btnClearSearch').onclick = ()=>{ $('pickerSearch').value=''; renderPicker(); };
-    $('btnClosePicker').onclick  = closePicker;
-    $('btnAcceptPicker').onclick = ()=>{
-      if (!currentSlot || !tempChoice) { closePicker(); return; }
-      setSlotValue(currentSlot, tempChoice);
-      closePicker();
-    };
-    $('btnClearSlot').onclick   = ()=>{ if (currentSlot){ setSlotValue(currentSlot,''); closePicker(); } };
-    $('pickerBackdrop').addEventListener('click', (e)=>{ if (e.target.id === 'pickerBackdrop') closePicker(); });
-
     function setSlotValue(slot, code){
-      $(slot).value = code || '';
+      document.getElementById(slot).value = code || '';
       const btn = document.querySelector(`.slot[data-slot="${slot}"]`);
       const img = btn.querySelector('img');
       const label = btn.querySelector('span');
       if (code){
-        img.src = nombrePNG(code);
-        btn.classList.add('filled');
-        label.textContent = code;
+        img.src = png(code);
+        btn.classList.add('filled'); label.textContent = code;
       }else{
-        img.src = '';
-        btn.classList.remove('filled');
-        label.textContent = 'Elegir';
+        img.src = ''; btn.classList.remove('filled'); label.textContent = 'Elegir';
       }
     }
 
@@ -341,128 +279,127 @@
       return res;
     }
 
-    /* ===== Evaluador Texas Hold'em (7 -> mejor 5) ===== */
-    const valorA = (v) => v==='A'?14 : v==='K'?13 : v==='Q'?12 : v==='J'?11 : parseInt(v,10);
-    function parse(code){ return { r: valorA(code.slice(0,-1)), s: code.slice(-1) }; }
-    function uniqueDesc(arr){ return [...new Set(arr)].sort((a,b)=>b-a); }
-    function uniqueAsc(arr){ return [...new Set(arr)].sort((a,b)=>a-b); }
-    function highestStraight(ranks){
-      let u = uniqueAsc(ranks);
-      if (u.includes(14)) u = [1, ...u]; let best = 0, run = 1;
+    /* ===== Evaluador Texas Hold'em ===== */
+    const vA = (v) => v==='A'?14 : v==='K'?13 : v==='Q'?12 : v==='J'?11 : parseInt(v,10);
+    const parse = (c)=>({r:vA(c.slice(0,-1)), s:c.slice(-1)});
+    const uniqDesc = a => [...new Set(a)].sort((x,y)=>y-x);
+    const uniqAsc  = a => [...new Set(a)].sort((x,y)=>x-y);
+    function straightHigh(ranks){
+      let u = uniqAsc(ranks); if (u.includes(14)) u = [1, ...u];
+      let best=0, run=1;
       for (let i=1;i<u.length;i++){
-        if (u[i] === u[i-1] + 1) { run++; if (run >= 5) best = Math.max(best, u[i] === 1 ? 5 : u[i]); }
-        else run = 1;
+        if (u[i]===u[i-1]+1){ run++; if (run>=5) best = Math.max(best, u[i]===1?5:u[i]); }
+        else run=1;
       }
       return best;
     }
     function best5of7(codes){
-      const cards = codes.map(parse);
-      const ranks = cards.map(c=>c.r).sort((a,b)=>b-a);
+      const cs = codes.map(parse), ranks = cs.map(c=>c.r).sort((a,b)=>b-a);
       const cnt = new Map(), suit = new Map();
-      for (const c of cards){
-        cnt.set(c.r, (cnt.get(c.r)||0)+1);
-        if (!suit.has(c.s)) suit.set(c.s, []);
-        suit.get(c.s).push(c.r);
-      }
-      let flushSuit=null, flushRanks=[];
-      for (const [s, arr] of suit){ if (arr.length >= 5){ flushSuit=s; flushRanks = arr.sort((a,b)=>b-a); break; } }
-      if (flushSuit){
-        const sfHigh = highestStraight(flushRanks);
-        if (sfHigh) return { cat:8, tiebreak:[sfHigh], descr:'Escalera color' };
-      }
-      const groups = {4:[],3:[],2:[],1:[]};
-      for (const [r, c] of cnt) groups[c].push(r);
-      for (const k of [4,3,2,1]) groups[k].sort((a,b)=>b-a);
-      if (groups[4].length){
-        const quad = groups[4][0];
-        const kick = uniqueDesc(ranks.filter(r=>r!==quad))[0];
-        return { cat:7, tiebreak:[quad, kick], descr:'Póker' };
-      }
-      if (groups[3].length && (groups[2].length || groups[3].length>=2)){
-        const triple = groups[3][0];
-        const pair   = (groups[3].length>=2) ? groups[3][1] : groups[2][0];
-        return { cat:6, tiebreak:[triple, pair], descr:'Full' };
-      }
-      if (flushSuit){
-        const top5 = uniqueDesc(flushRanks).slice(0,5);
-        return { cat:5, tiebreak:top5, descr:'Color' };
-      }
-      const stHigh = highestStraight(ranks);
-      if (stHigh){ return { cat:4, tiebreak:[stHigh], descr:'Escalera' }; }
-      if (groups[3].length){
-        const t = groups[3][0];
-        const kickers = uniqueDesc(ranks.filter(r=>r!==t)).slice(0,2);
-        return { cat:3, tiebreak:[t, ...kickers], descr:'Trío' };
-      }
-      if (groups[2].length >= 2){
-        const [p1, p2] = groups[2].slice(0,2);
-        const kick = uniqueDesc(ranks.filter(r=>r!==p1 && r!==p2))[0];
-        return { cat:2, tiebreak:[p1, p2, kick], descr:'Doble par' };
-      }
-      if (groups[2].length){
-        const p = groups[2][0];
-        const kicks = uniqueDesc(ranks.filter(r=>r!==p)).slice(0,3);
-        return { cat:1, tiebreak:[p, ...kicks], descr:'Par' };
-      }
-      return { cat:0, tiebreak: uniqueDesc(ranks).slice(0,5), descr:'Carta alta' };
+      for (const c of cs){ cnt.set(c.r,(cnt.get(c.r)||0)+1); (suit.get(c.s)||suit.set(c.s,[]),suit.get(c.s)).push(c.r); }
+      let flushS=null, flushR=[]; for (const [s,arr] of suit){ if (arr.length>=5){ flushS=s; flushR=arr.sort((a,b)=>b-a); break; } }
+      if (flushS){ const sf=straightHigh(flushR); if (sf) return {cat:8,t:[sf],d:'Escalera color'}; }
+      const groups={4:[],3:[],2:[],1:[]}; for (const [r,c] of cnt) groups[c].push(r); for (const k of [4,3,2,1]) groups[k].sort((a,b)=>b-a);
+      if (groups[4].length){ const q=groups[4][0], k=uniqDesc(ranks.filter(r=>r!==q))[0]; return {cat:7,t:[q,k],d:'Póker'}; }
+      if (groups[3].length && (groups[2].length || groups[3].length>=2)){ const t=groups[3][0], p=groups[3].length>=2?groups[3][1]:groups[2][0]; return {cat:6,t:[t,p],d:'Full'}; }
+      if (flushS){ const top=uniqDesc(flushR).slice(0,5); return {cat:5,t:top,d:'Color'}; }
+      const st=straightHigh(ranks); if (st) return {cat:4,t:[st],d:'Escalera'};
+      if (groups[3].length){ const t=groups[3][0], ks=uniqDesc(ranks.filter(r=>r!==t)).slice(0,2); return {cat:3,t:[t,...ks],d:'Trío'}; }
+      if (groups[2].length>=2){ const [p1,p2]=groups[2].slice(0,2), k=uniqDesc(ranks.filter(r=>r!==p1&&r!==p2))[0]; return {cat:2,t:[p1,p2,k],d:'Doble par'}; }
+      if (groups[2].length){ const p=groups[2][0], ks=uniqDesc(ranks.filter(r=>r!==p)).slice(0,3); return {cat:1,t:[p,...ks],d:'Par'}; }
+      return {cat:0,t:uniqDesc(ranks).slice(0,5),d:'Carta alta'};
     }
-    function compareHands(a,b){
-      if (a.cat !== b.cat) return a.cat - b.cat;
-      const n = Math.max(a.tiebreak.length, b.tiebreak.length);
-      for (let i=0;i<n;i++){
-        const va = a.tiebreak[i]||0, vb = b.tiebreak[i]||0;
-        if (va !== vb) return va - vb;
-      }
-      return 0;
-    }
-    function evaluar(manos, board){
-      const h1 = best5of7([...manos[0], ...board]);
-      const h2 = best5of7([...manos[1], ...board]);
-      const cmp = compareHands(h1, h2);
-      if (cmp > 0) return { ganador:1, jugada1:h1.descr, jugada2:h2.descr };
-      if (cmp < 0) return { ganador:2, jugada1:h1.descr, jugada2:h2.descr };
-      return { ganador:0, jugada1:h1.descr, jugada2:h2.descr };
+    function cmp(a,b){ if (a.cat!==b.cat) return a.cat-b.cat; for (let i=0;i<Math.max(a.t.length,b.t.length);i++){ const va=a.t[i]||0,vb=b.t[i]||0; if (va!==vb) return va-vb; } return 0; }
+    function evaluar(manos,board){
+      const h1=best5of7([...manos[0],...board]), h2=best5of7([...manos[1],...board]); const c=cmp(h1,h2);
+      if (c>0) return {g:1,j1:h1.d,j2:h2.d}; if (c<0) return {g:2,j1:h1.d,j2:h2.d}; return {g:0,j1:h1.d,j2:h2.d};
     }
 
-    // ---- Acciones principales ----
-    $('btnMostrar').onclick = () => {
-      const c1=$('j1c1').value, c2=$('j1c2').value, c3=$('j2c1').value, c4=$('j2c2').value;
-      validar([c1,c2,c3,c4]); // solo valida: las cartas ya están visibles en los slots
+    // ---------- acciones ----------
+    document.getElementById('btnSwap').onclick = ()=>{
+      const a1=document.getElementById('j1c1').value, a2=document.getElementById('j1c2').value;
+      const b1=document.getElementById('j2c1').value, b2=document.getElementById('j2c2').value;
+      setSlotValue('j1c1', b1); setSlotValue('j1c2', b2);
+      setSlotValue('j2c1', a1); setSlotValue('j2c2', a2);
     };
-    $('btnBoardEval').onclick = () => {
-      const c1=$('j1c1').value, c2=$('j1c2').value, c3=$('j2c1').value, c4=$('j2c2').value;
+
+    document.getElementById('btnBoardEval').onclick = ()=>{
+      const c1=j('j1c1'), c2=j('j1c2'), c3=j('j2c1'), c4=j('j2c2');
       if (!validar([c1,c2,c3,c4])) return;
-      const usadas = new Set([c1,c2,c3,c4]);
-      const board = barajarBoard(usadas);
-      [0,1,2,3,4].forEach(i => document.getElementById('board'+i).src = `Cartas/${board[i]}.png`);
-      const r = evaluar([[c1,c2],[c3,c4]], board);
+      const usadas=new Set([c1,c2,c3,c4]); const board=barajarBoard(usadas);
+      for (let i=0;i<5;i++) document.getElementById('board'+i).src = png(board[i]);
+      const r=evaluar([[c1,c2],[c3,c4]], board);
       document.getElementById('resultado').textContent =
-        r.ganador===1 ? `🏆 Gana Jugador 1 (${r.jugada1})` :
-        r.ganador===2 ? `🏆 Gana Jugador 2 (${r.jugada2})` :
-                        `🤝 Empate (${r.jugada1})`;
+        r.g===1?`🏆 Gana Jugador 1 (${r.j1})`: r.g===2?`🏆 Gana Jugador 2 (${r.j2})`:`🤝 Empate (${r.j1})`;
     };
-    $('btnSimular').onclick = () => {
-      const c1=$('j1c1').value, c2=$('j1c2').value, c3=$('j2c1').value, c4=$('j2c2').value;
+
+    document.getElementById('btnSimular').onclick = ()=>{
+      const c1=j('j1c1'), c2=j('j1c2'), c3=j('j2c1'), c4=j('j2c2');
       if (!validar([c1,c2,c3,c4])) return;
-      let n = parseInt((document.getElementById('sims').value || '1000'), 10);
-      if (!Number.isFinite(n) || n < 1) n = 1000;
-      n = Math.min(n, 20000);
-      const usadasBase = new Set([c1,c2,c3,c4]);
-      let w1=0, w2=0, emp=0;
-      for (let k=0;k<n;k++){
-        const b = barajarBoard(usadasBase);
-        const r = evaluar([[c1,c2],[c3,c4]], b);
-        if (r.ganador===1) w1++; else if (r.ganador===2) w2++; else emp++;
-      }
-      const p1=(w1/n*100).toFixed(2), p2=(w2/n*100).toFixed(2), pe=(emp/n*100).toFixed(2);
-      document.getElementById('simu').textContent = `🧠 ${n} sims\nJugador 1: ${p1}%   |   Jugador 2: ${p2}%   |   Empates: ${pe}%`;
+      let n=parseInt((document.getElementById('sims').value||'1000'),10); if (!Number.isFinite(n)||n<1) n=1000; n=Math.min(n,20000);
+      const usadas=new Set([c1,c2,c3,c4]); let w1=0,w2=0,e=0;
+      for (let k=0;k<n;k++){ const b=barajarBoard(usadas); const r=evaluar([[c1,c2],[c3,c4]], b); if (r.g===1) w1++; else if (r.g===2) w2++; else e++; }
+      document.getElementById('simu').textContent = `🧠 ${n} sims  |  J1: ${(w1/n*100).toFixed(2)}%  J2: ${(w2/n*100).toFixed(2)}%  Emp: ${(e/n*100).toFixed(2)}%`;
     };
-    document.getElementById('btnLimpiar').onclick = () => {
-      ['j1c1','j1c2','j2c1','j2c2'].forEach(id => setSlotValue(id,''));
-      ['board0','board1','board2','board3','board4'].forEach(id => document.getElementById(id).src='');
-      document.getElementById('resultado').textContent = '';
-      document.getElementById('simu').textContent = '';
+
+    document.getElementById('btnLimpiar').onclick = ()=>{
+      ['j1c1','j1c2','j2c1','j2c2'].forEach(id=>setSlotValue(id,''));
+      ['board0','board1','board2','board3','board4'].forEach(id=>document.getElementById(id).src='');
+      document.getElementById('resultado').textContent=''; document.getElementById('simu').textContent='';
     };
+
+    function j(id){ return document.getElementById(id).value; }
+
+    // ---------- picker (con filtro por palo) ----------
+    let currentSlot=null, tempChoice=null, suitFilter='';
+    const $picker = (id)=>document.getElementById(id);
+    const normalize = s => (s||'').toUpperCase().replace(/\s+/g,'');
+
+    function usedSet(except){
+      const ids=['j1c1','j1c2','j2c1','j2c2'].filter(x=>x!==except), s=new Set();
+      ids.forEach(id=>{ const v=j(id); if (v) s.add(v); }); return s;
+    }
+
+    function renderPicker(){
+      const grid=$picker('pickerGrid'); grid.innerHTML='';
+      const used=usedSet(currentSlot); const q=normalize($picker('pickerSearch').value);
+      cartas.forEach(code=>{
+        if (suitFilter && !code.endsWith(suitFilter)) return;
+        if (q && !normalize(code).includes(q)) return;
+        const b=document.createElement('button'); b.className='pick-btn'; b.type='button'; b.title=code;
+        b.innerHTML=`<img src="${png(code)}" alt="${code}">`;
+        if (used.has(code)) b.disabled=true;
+        if (tempChoice===code) b.style.outline='3px solid #cfe9df';
+        b.addEventListener('click', ()=>{
+          tempChoice=code; [...grid.querySelectorAll('.pick-btn')].forEach(x=>x.style.outline='none'); b.style.outline='3px solid #cfe9df';
+        });
+        grid.appendChild(b);
+      });
+    }
+
+    function openPicker(slot){
+      currentSlot=slot; tempChoice=j(slot)||null;
+      $picker('pickerTitle').textContent=`Elige una carta (${slot.toUpperCase()})`;
+      $picker('pickerSearch').value=''; suitFilter='';
+      document.querySelectorAll('.suit-btn').forEach(b=>b.classList.toggle('active', b.dataset.suit===''));
+      renderPicker();
+      $picker('pickerBackdrop').classList.add('open'); $picker('pickerBackdrop').setAttribute('aria-hidden','false');
+      setTimeout(()=> $picker('pickerSearch').focus(), 40);
+    }
+    function closePicker(){ $picker('pickerBackdrop').classList.remove('open'); $picker('pickerBackdrop').setAttribute('aria-hidden','true'); currentSlot=null; tempChoice=null; }
+    $picker('pickerSearch').addEventListener('input', renderPicker);
+    $picker('btnClearSearch').onclick = ()=>{ $picker('pickerSearch').value=''; renderPicker(); };
+    $picker('btnClosePicker').onclick  = closePicker;
+    $picker('btnAcceptPicker').onclick = ()=>{ if (currentSlot && tempChoice) setSlotValue(currentSlot, tempChoice); closePicker(); };
+    $picker('btnClearSlot').onclick    = ()=>{ if (currentSlot) setSlotValue(currentSlot,''); closePicker(); };
+    $picker('pickerBackdrop').addEventListener('click', e=>{ if (e.target.id==='pickerBackdrop') closePicker(); });
+
+    // filtro por palo
+    document.getElementById('suits').addEventListener('click', (e)=>{
+      const btn=e.target.closest('.suit-btn'); if (!btn) return;
+      suitFilter = btn.dataset.suit; document.querySelectorAll('.suit-btn').forEach(b=>b.classList.toggle('active', b===btn));
+      renderPicker();
+    });
   </script>
 </body>
 </html>
