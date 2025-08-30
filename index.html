@@ -7,118 +7,94 @@
   <style>
     /* ===== Mesa de póker (tema) + diseño responsivo ===== */
     :root{
-      /* Escalado fluido */
       --cardW: clamp(56px, 9.5vw, 96px);
       --radius: clamp(28px, 5vw, 48px);
       --pad: clamp(14px, 3.2vw, 26px);
-
-      /* Colores */
       --felt-1:#1f7a4a;  --felt-2:#0f5a37;  --felt-3:#063b25;
       --wood-1:#7b4b2a;  --wood-2:#5c361d;  --wood-3:#3d2414;
       --ink:#ffffff;     --ink-dim:#e8f3ed; --line:#cfe9df;
     }
-
-    /* Fondo general */
     body{
-      margin: 0;
-      font-family: system-ui, Arial, sans-serif;
-      color: var(--ink);
+      margin: 0; font-family: system-ui, Arial, sans-serif; color: var(--ink);
       background: radial-gradient(1200px 700px at 50% -10%, #0a3a28 0%, #042218 60%, #031912 100%);
     }
-
     .page{ padding: clamp(8px, 2.5vw, 20px); }
-
-    /* Contenedor con forma de mesa */
     .table{
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: var(--pad);
-      border-radius: calc(var(--radius) + 16px);
-      position: relative;
+      max-width: 1100px; margin: 0 auto; padding: var(--pad);
+      border-radius: calc(var(--radius) + 16px); position: relative;
       background:
         radial-gradient(1200px 700px at 50% 20%, rgba(255,255,255,.10), rgba(0,0,0,.18) 70%) ,
         radial-gradient(600px 400px at 30% 30%, rgba(255,255,255,.06), transparent 70%),
         radial-gradient(600px 400px at 70% 70%, rgba(255,255,255,.05), transparent 70%),
         radial-gradient(circle at 50% 50%, var(--felt-1) 0%, var(--felt-2) 55%, var(--felt-3) 100%);
-      box-shadow:
-        0 18px 40px rgba(0,0,0,.55),
-        inset 0 2px 6px rgba(255,255,255,.10),
-        inset 0 -6px 18px rgba(0,0,0,.45);
+      box-shadow: 0 18px 40px rgba(0,0,0,.55), inset 0 2px 6px rgba(255,255,255,.10),
+                  inset 0 -6px 18px rgba(0,0,0,.45);
     }
     .table::before{
-      content:"";
-      position:absolute;
-      inset: calc(var(--pad) * -0.9);
+      content:""; position:absolute; inset: calc(var(--pad) * -0.9);
       border-radius: calc(var(--radius) + 28px);
       background: linear-gradient(180deg, var(--wood-1), var(--wood-2) 45%, var(--wood-2) 60%, var(--wood-3));
-      box-shadow:
-        0 20px 45px rgba(0,0,0,.6),
-        inset 0 2px 3px rgba(255,255,255,.25),
-        inset 0 -3px 6px rgba(0,0,0,.55);
+      box-shadow: 0 20px 45px rgba(0,0,0,.6), inset 0 2px 3px rgba(255,255,255,.25),
+                  inset 0 -3px 6px rgba(0,0,0,.55);
       z-index:-1;
     }
-
-    /* Tipografía fluida */
     h1{ font-size: clamp(22px, 3.2vw, 34px); margin: 0 0 14px; }
     h2{ font-size: clamp(18px, 2.4vw, 22px); margin: 6px 0; color: var(--ink-dim); }
     h3{ font-size: clamp(16px, 2.1vw, 20px); margin: 10px 0; color: var(--ink-dim); }
-    label{ font-weight: 700; color: var(--ink-dim); }
-
-    /* Layouts */
-    .grid-players{
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: clamp(10px, 2vw, 22px);
-    }
-    @media (max-width: 720px){
-      .grid-players{ grid-template-columns: 1fr; }
-    }
-
+    .grid-players{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: clamp(10px, 2vw, 22px); }
+    @media (max-width: 720px){ .grid-players{ grid-template-columns: 1fr; } }
     .row{ display:flex; gap: 10px; align-items:center; flex-wrap:wrap; }
     .col{ display:flex; flex-direction:column; gap: 8px; }
-
-    /* Controles */
-    select, input[type="number"]{
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.25);
-      background: rgba(255,255,255,.08);
-      color: var(--ink);
-      outline: none;
-      min-width: clamp(110px, 28vw, 160px);
-    }
-    select:focus, input[type="number"]:focus{
-      border-color: var(--line);
-      box-shadow: 0 0 0 3px rgba(207,233,223,.15);
-    }
-    input[type="number"]{ width: clamp(110px, 26vw, 150px); }
-
     .btn{
-      padding: 12px 16px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.25);
+      padding: 12px 16px; border-radius: 14px; border:1px solid rgba(255,255,255,.25);
       background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
-      color: var(--ink);
-      cursor: pointer;
+      color: var(--ink); cursor: pointer;
       box-shadow: 0 4px 10px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.15);
       touch-action: manipulation;
     }
     .btn:hover{ filter: brightness(1.06); }
     .btn:active{ transform: translateY(1px); }
 
-    /* Cartas escalables */
+    /* Cartas visibles (slots y board) */
     .card{
-      width: var(--cardW);
-      height: calc(var(--cardW) * 1.5);
-      object-fit: contain;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,.35);
-      box-shadow: 0 6px 12px rgba(0,0,0,.35);
-      background: rgba(255,255,255,.08);
+      width: var(--cardW); height: calc(var(--cardW) * 1.5); object-fit: contain;
+      border-radius: 10px; border: 1px solid rgba(255,255,255,.35);
+      box-shadow: 0 6px 12px rgba(0,0,0,.35); background: rgba(255,255,255,.08);
     }
     .cards-row{ display:flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .slot{
+      width: var(--cardW); height: calc(var(--cardW)*1.5); border-radius: 12px; border: 1px dashed rgba(255,255,255,.35);
+      background: rgba(255,255,255,.07); color: var(--ink-dim); display:grid; place-items:center;
+      font-weight:700; cursor:pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,.1);
+    }
+    .slot:hover{ background: rgba(255,255,255,.10); }
 
-    .out{ white-space: pre-line; font-weight: 600; margin-top: 8px; }
+    /* ===== Modal selector de cartas ===== */
+    .picker-backdrop{
+      position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none; z-index: 10;
+      align-items: center; justify-content: center; padding: 16px;
+    }
+    .picker-backdrop.open{ display:flex; }
+    .picker{
+      width: min(1000px, 100%); max-height: 90vh; overflow: auto; border-radius: 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
+      border: 1px solid rgba(255,255,255,.25); box-shadow: 0 16px 40px rgba(0,0,0,.6);
+      padding: 14px;
+    }
+    .picker-header{ display:flex; align-items:center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .picker-title{ font-weight:700; }
+    .picker-grid{
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(var(--cardW), 1fr)); gap: 10px;
+    }
+    .pick-btn{
+      border: 1px solid rgba(255,255,255,.35); border-radius: 10px; background: rgba(255,255,255,.08);
+      padding: 0; cursor:pointer; display:block;
+      box-shadow: 0 6px 12px rgba(0,0,0,.35);
+    }
+    .pick-btn img{ width: 100%; height: calc(var(--cardW) * 1.5); object-fit: contain; display:block; border-radius: 10px; }
+    .pick-btn[disabled]{ filter: grayscale(1) brightness(.7); cursor:not-allowed; opacity: .6; }
+    .picker-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top: 10px; }
+    .btn-secondary{ background: rgba(255,255,255,.08); }
   </style>
 </head>
 <body>
@@ -129,10 +105,12 @@
       <section class="grid-players">
         <div class="col">
           <h2>Jugador 1</h2>
-          <div class="row">
-            <select id="j1c1"></select>
-            <select id="j1c2"></select>
+          <!-- Slots clicables -->
+          <div class="cards-row">
+            <button class="slot" data-slot="j1c1" title="Elegir carta J1-1">Elegir</button>
+            <button class="slot" data-slot="j1c2" title="Elegir carta J1-2">Elegir</button>
           </div>
+          <!-- Vista de cartas elegidas -->
           <div class="cards-row">
             <img id="img_j1c1" class="card" />
             <img id="img_j1c2" class="card" />
@@ -141,9 +119,9 @@
 
         <div class="col">
           <h2>Jugador 2</h2>
-          <div class="row">
-            <select id="j2c1"></select>
-            <select id="j2c2"></select>
+          <div class="cards-row">
+            <button class="slot" data-slot="j2c1" title="Elegir carta J2-1">Elegir</button>
+            <button class="slot" data-slot="j2c2" title="Elegir carta J2-2">Elegir</button>
           </div>
           <div class="cards-row">
             <img id="img_j2c1" class="card" />
@@ -177,21 +155,116 @@
         <button class="btn" id="btnSimular">Simular probabilidades</button>
       </section>
       <div id="simu" class="out"></div>
+
+      <!-- Inputs ocultos para compatibilidad con la lógica existente -->
+      <input id="j1c1" type="hidden"><input id="j1c2" type="hidden">
+      <input id="j2c1" type="hidden"><input id="j2c2" type="hidden">
+    </div>
+  </div>
+
+  <!-- ===== Modal selector de cartas ===== -->
+  <div class="picker-backdrop" id="pickerBackdrop" aria-hidden="true">
+    <div class="picker" role="dialog" aria-modal="true">
+      <div class="picker-header">
+        <div class="picker-title" id="pickerTitle">Elige una carta</div>
+        <button class="btn btn-secondary" id="btnClosePicker">Cerrar</button>
+      </div>
+      <div class="picker-grid" id="pickerGrid"></div>
+      <div class="picker-actions">
+        <button class="btn btn-secondary" id="btnClearSlot">Quitar carta</button>
+        <button class="btn" id="btnAcceptPicker">Aceptar</button>
+      </div>
     </div>
   </div>
 
   <script>
-    /* ====== LÓGICA: evaluador nativo + UI ====== */
+    /* ====== LÓGICA ====== */
     const valores = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
     const palos = ['C','D','P','T'];
     const cartas = []; for (const v of valores) for (const p of palos) cartas.push(v+p);
     const nombrePNG = (code) => `Cartas/${code}.png`;
     const $ = (id) => document.getElementById(id);
 
-    function llenarSelect(sel){
-      sel.innerHTML = '<option value="">Carta</option>' +
-        cartas.map(c=>`<option value="${c}">${c}</option>`).join('');
+    // ---- Picker visual ----
+    let currentSlot = null;   // 'j1c1' | 'j1c2' | 'j2c1' | 'j2c2'
+    let tempChoice  = null;   // elección temporal en el modal
+
+    // botones de los slots
+    document.querySelectorAll('.slot').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        openPicker(btn.dataset.slot);
+      });
+    });
+
+    function getUsedSet(exceptSlot=null){
+      const ids = ['j1c1','j1c2','j2c1','j2c2'].filter(id => id !== exceptSlot);
+      const set = new Set();
+      ids.forEach(id => { const v=$(id).value; if (v) set.add(v); });
+      return set;
     }
+
+    function openPicker(slot){
+      currentSlot = slot;
+      tempChoice  = $(slot).value || null;
+      $('pickerTitle').textContent = `Elige una carta (${slot.toUpperCase()})`;
+      const used = getUsedSet(slot);
+      const grid = $('pickerGrid');
+      grid.innerHTML = '';
+      cartas.forEach(code=>{
+        const b = document.createElement('button');
+        b.className = 'pick-btn';
+        b.type = 'button';
+        b.title = code;
+        b.innerHTML = `<img src="${nombrePNG(code)}" alt="${code}">`;
+        if (used.has(code)) b.disabled = true;
+        if (tempChoice === code) b.style.outline = '3px solid #cfe9df';
+        b.addEventListener('click', ()=>{
+          tempChoice = code;
+          // marcar selección visualmente
+          [...grid.querySelectorAll('.pick-btn')].forEach(x=>x.style.outline='none');
+          b.style.outline = '3px solid #cfe9df';
+        });
+        grid.appendChild(b);
+      });
+      $('pickerBackdrop').classList.add('open');
+      $('pickerBackdrop').setAttribute('aria-hidden','false');
+    }
+
+    function closePicker(){
+      $('pickerBackdrop').classList.remove('open');
+      $('pickerBackdrop').setAttribute('aria-hidden','true');
+      currentSlot = null; tempChoice = null;
+    }
+
+    $('btnClosePicker').onclick = closePicker;
+    $('btnAcceptPicker').onclick = ()=>{
+      if (!currentSlot || !tempChoice) { closePicker(); return; }
+      setSlotValue(currentSlot, tempChoice);
+      closePicker();
+    };
+    $('btnClearSlot').onclick = ()=>{
+      if (!currentSlot) return;
+      setSlotValue(currentSlot, '');
+      closePicker();
+    };
+    // cerrar al clickear fuera
+    $('pickerBackdrop').addEventListener('click', (e)=>{
+      if (e.target.id === 'pickerBackdrop') closePicker();
+    });
+
+    function setSlotValue(slot, code){
+      $(slot).value = code || '';
+      const imgId = 'img_'+slot;
+      const slotBtn = document.querySelector(`.slot[data-slot="${slot}"]`);
+      if (code){
+        document.getElementById(imgId).src = nombrePNG(code);
+        slotBtn.textContent = code;
+      }else{
+        document.getElementById(imgId).src = '';
+        slotBtn.textContent = 'Elegir';
+      }
+    }
+
     function mostrarCarta(code, img){ img.src = code ? nombrePNG(code) : ''; }
     function validar(cuatro){
       if (cuatro.some(c => !c)) { alert('❌ Debes seleccionar las 4 cartas (2 por jugador).'); return false; }
@@ -204,15 +277,14 @@
       return res;
     }
 
-    // --- Evaluador Texas Hold'em (7 -> mejor 5) ---
+    // ===== Evaluador Texas Hold'em (7 -> mejor 5) =====
     const valorA = (v) => v==='A'?14 : v==='K'?13 : v==='Q'?12 : v==='J'?11 : parseInt(v,10);
     function parse(code){ return { r: valorA(code.slice(0,-1)), s: code.slice(-1) }; }
     function uniqueDesc(arr){ return [...new Set(arr)].sort((a,b)=>b-a); }
     function uniqueAsc(arr){ return [...new Set(arr)].sort((a,b)=>a-b); }
-
     function highestStraight(ranks){
       let u = uniqueAsc(ranks);
-      if (u.includes(14)) u = [1, ...u]; // A como 1 para A2345
+      if (u.includes(14)) u = [1, ...u];
       let best = 0, run = 1;
       for (let i=1;i<u.length;i++){
         if (u[i] === u[i-1] + 1) { run++; if (run >= 5) best = Math.max(best, u[i] === 1 ? 5 : u[i]); }
@@ -229,7 +301,6 @@
         if (!suit.has(c.s)) suit.set(c.s, []);
         suit.get(c.s).push(c.r);
       }
-      // Flush / Straight Flush
       let flushSuit=null, flushRanks=[];
       for (const [s, arr] of suit){
         if (arr.length >= 5){ flushSuit=s; flushRanks = arr.sort((a,b)=>b-a); break; }
@@ -292,59 +363,46 @@
       return { ganador:0, jugada1:h1.descr, jugada2:h2.descr };
     }
 
-    // --- UI ---
-    document.addEventListener('DOMContentLoaded', () => {
-      ['j1c1','j1c2','j2c1','j2c2'].forEach(id => llenarSelect($(id)));
-
-      $('btnMostrar').onclick = () => {
-        const c1=$('j1c1').value, c2=$('j1c2').value, c3=$('j2c1').value, c4=$('j2c2').value;
-        if (!validar([c1,c2,c3,c4])) return;
-        mostrarCarta(c1,$('img_j1c1')); mostrarCarta(c2,$('img_j1c2'));
-        mostrarCarta(c3,$('img_j2c1')); mostrarCarta(c4,$('img_j2c2'));
-      };
-
-      let board=[];
-      $('btnBoardEval').onclick = () => {
-        const c1=$('j1c1').value, c2=$('j1c2').value, c3=$('j2c1').value, c4=$('j2c2').value;
-        if (!validar([c1,c2,c3,c4])) return;
-        const usadas = new Set([c1,c2,c3,c4]);
-        board = barajarBoard(usadas);
-        [0,1,2,3,4].forEach(i => mostrarCarta(board[i], $('board'+i)));
-        const r = evaluar([[c1,c2],[c3,c4]], board);
-        $('resultado').textContent =
-          r.ganador===1 ? `🏆 Gana Jugador 1 (${r.jugada1})` :
-          r.ganador===2 ? `🏆 Gana Jugador 2 (${r.jugada2})` :
-                          `🤝 Empate (${r.jugada1})`;
-      };
-
-      $('btnSimular').onclick = () => {
-        const c1=$('j1c1').value, c2=$('j1c2').value, c3=$('j2c1').value, c4=$('j2c2').value;
-        if (!validar([c1,c2,c3,c4])) return;
-
-        let n = parseInt(($('sims').value || '1000'), 10);
-        if (!Number.isFinite(n) || n < 1) n = 1000;
-        n = Math.min(n, 20000);
-
-        const usadasBase = new Set([c1,c2,c3,c4]);
-        let w1=0, w2=0, emp=0;
-        for (let k=0;k<n;k++){
-          const b = barajarBoard(usadasBase);
-          const r = evaluar([[c1,c2],[c3,c4]], b);
-          if (r.ganador===1) w1++; else if (r.ganador===2) w2++; else emp++;
-        }
-        const p1=(w1/n*100).toFixed(2), p2=(w2/n*100).toFixed(2), pe=(emp/n*100).toFixed(2);
-        $('simu').textContent = `🧠 ${n} sims\nJugador 1: ${p1}%   |   Jugador 2: ${p2}%   |   Empates: ${pe}%`;
-      };
-
-      $('btnLimpiar').onclick = () => {
-        ['j1c1','j1c2','j2c1','j2c2'].forEach(id => $(id).value = '');
-        ['img_j1c1','img_j1c2','img_j2c1','img_j2c2','board0','board1','board2','board3','board4']
-          .forEach(id => $(id).src = '');
-        $('resultado').textContent = '';
-        $('simu').textContent = '';
-        board = [];
-      };
-    });
+    // ---- Botones principales ----
+    $('btnMostrar').onclick = () => {
+      const c1=$('j1c1').value, c2=$('j1c2').value, c3=$('j2c1').value, c4=$('j2c2').value;
+      if (!validar([c1,c2,c3,c4])) return;
+      mostrarCarta(c1,$('img_j1c1')); mostrarCarta(c2,$('img_j1c2'));
+      mostrarCarta(c3,$('img_j2c1')); mostrarCarta(c4,$('img_j2c2'));
+    };
+    $('btnBoardEval').onclick = () => {
+      const c1=$('j1c1').value, c2=$('j1c2').value, c3=$('j2c1').value, c4=$('j2c2').value;
+      if (!validar([c1,c2,c3,c4])) return;
+      const usadas = new Set([c1,c2,c3,c4]);
+      const board = barajarBoard(usadas);
+      [0,1,2,3,4].forEach(i => mostrarCarta(board[i], $('board'+i)));
+      const r = evaluar([[c1,c2],[c3,c4]], board);
+      $('resultado').textContent =
+        r.ganador===1 ? `🏆 Gana Jugador 1 (${r.jugada1})` :
+        r.ganador===2 ? `🏆 Gana Jugador 2 (${r.jugada2})` :
+                        `🤝 Empate (${r.jugada1})`;
+    };
+    $('btnSimular').onclick = () => {
+      const c1=$('j1c1').value, c2=$('j1c2').value, c3=$('j2c1').value, c4=$('j2c2').value;
+      if (!validar([c1,c2,c3,c4])) return;
+      let n = parseInt(($('sims').value || '1000'), 10);
+      if (!Number.isFinite(n) || n < 1) n = 1000;
+      n = Math.min(n, 20000);
+      const usadasBase = new Set([c1,c2,c3,c4]);
+      let w1=0, w2=0, emp=0;
+      for (let k=0;k<n;k++){
+        const b = barajarBoard(usadasBase);
+        const r = evaluar([[c1,c2],[c3,c4]], b);
+        if (r.ganador===1) w1++; else if (r.ganador===2) w2++; else emp++;
+      }
+      const p1=(w1/n*100).toFixed(2), p2=(w2/n*100).toFixed(2), pe=(emp/n*100).toFixed(2);
+      $('simu').textContent = `🧠 ${n} sims\nJugador 1: ${p1}%   |   Jugador 2: ${p2}%   |   Empates: ${pe}%`;
+    };
+    $('btnLimpiar').onclick = () => {
+      ['j1c1','j1c2','j2c1','j2c2'].forEach(id => setSlotValue(id,''));
+      ['board0','board1','board2','board3','board4'].forEach(id => $(id).src='');
+      $('resultado').textContent = ''; $('simu').textContent = '';
+    };
   </script>
 </body>
 </html>
