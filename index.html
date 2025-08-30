@@ -85,6 +85,7 @@
 
     // Mapas de conversión a pokersolver
     const paloToSolver = { C:'h', D:'d', P:'s', T:'c' }; // hearts/diamonds/spades/clubs
+    let TEN_SYMBOL = 'T'; // se detectará abajo automáticamente (T o 10)
     const nombrePNG = (code) => `Cartas/${code}.png`;
 
     const traductor = {
@@ -112,11 +113,12 @@
       imgEl.src = code ? nombrePNG(code) : '';
     }
 
-    // Conversión robusta: usar "10h/10c/..." (no "Th")
+    // Conversión a notación del solver: detecta si usa "T" o "10"
     function convertirASolver(code) {
       const valor = code.slice(0, -1); // "10", "A", ...
       const palo  = code.slice(-1);    // C/D/P/T
-      return valor + paloToSolver[palo]; // ej: "10c", "Ah", "Qs"
+      const face  = (valor === '10') ? TEN_SYMBOL : valor;
+      return face + paloToSolver[palo]; // ej: "Tc" o "10c", "Ah", "Qs"
     }
 
     function validar(cuatro) {
@@ -158,8 +160,25 @@
       return traductor[cat] || cat;
     }
 
-    // === Inicialización UI (cuando el DOM está listo) ===
+    // === Detección del símbolo para el 10 (T vs 10) ===
+    function detectarDiez() {
+      try {
+        const H = window.pokersolver && window.pokersolver.Hand;
+        if (!H) return;
+        // 1) Probar con "10h"
+        try { H.solve(['Ah','Kh','Qh','Jh','10h','9h','8h']); TEN_SYMBOL = '10'; return; }
+        catch(e1) {}
+        // 2) Probar con "Th"
+        try { H.solve(['Ah','Kh','Qh','Jh','Th','9h','8h']); TEN_SYMBOL = 'T'; return; }
+        catch(e2) {}
+      } catch (e) { /* ignore */ }
+      // Si no se pudo detectar, dejamos 'T' por defecto
+      TEN_SYMBOL = 'T';
+    }
+
+    // === Inicialización UI ===
     document.addEventListener('DOMContentLoaded', () => {
+      detectarDiez();
       ['j1c1','j1c2','j2c1','j2c2'].forEach(id => llenarSelect($(id)));
 
       // Mostrar manos
