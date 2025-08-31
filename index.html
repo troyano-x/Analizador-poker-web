@@ -4,56 +4,63 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Poker Juanito – Analizador</title>
+
+  <!-- Pre-carga del fondo -->
+  <link rel="preload" as="image" href="assets/fondo-dealer-mobile.jpg">
+
   <style>
     :root{
-      --cardW: clamp(52px, 8.4vw, 100px);         /* slots/board */
-      --pickW: clamp(38px, 10.7vw, 70px);         /* cartas en el selector */
+      /* Ajusta esta ruta si tu imagen tiene otro nombre o carpeta */
+      --table-img: url("assets/fondo-dealer-mobile.jpg");
+
+      --cardW: clamp(56px, 8.8vw, 100px);          /* tamaño de cartas en mesa */
+      --pickW: clamp(38px, 10.7vw, 70px);          /* cartas en el selector */
       --radius: clamp(26px, 5vw, 52px);
       --pad: clamp(12px, 3.2vw, 26px);
+
       --felt-1:#1f7a4a;  --felt-2:#0f5a37;  --felt-3:#063b25;
       --wood-1:#875431;  --wood-2:#6a3f23;  --wood-3:#51311a;  --wood-4:#3b2414;
+
       --ink:#ffffff;     --ink-dim:#e8f3ed; --gold:#eacb7b;
       --j1:#34d399; --j2:#f87171; --emp:#cbd5e1; /* colores barras */
     }
 
-    /* Fondo madera */
+    /* Fondo general */
     body{
       margin:0; font-family: system-ui, Arial, sans-serif; color:var(--ink);
       background:
-        repeating-linear-gradient( 90deg,
-          #784d2c 0px, #7f5230 60px, #774a28 60px, #6d4324 120px ),
-        linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.18));
+        var(--table-img) center/cover no-repeat fixed,
+        repeating-linear-gradient(90deg,#784d2c 0px,#7f5230 60px,#774a28 60px,#6d4324 120px);
     }
-    .page{ padding: clamp(10px,2.6vw,22px); }
+    @media (max-width: 768px){ body{ background-attachment: scroll; } }
 
-    /* Tapete + barandal (sin línea oval) */
+    .page{ padding: clamp(8px,2.4vw,18px); }
+
+    /* Tapete integrado en la propia imagen (contiene HUD y elementos) */
     .table{
-      max-width: 1100px; margin:0 auto; padding:var(--pad);
-      border-radius: calc(var(--radius) + 18px); position:relative;
+      position: relative;
+      margin: 0 auto;
+      height: min(100vh, 880px);
+      aspect-ratio: 9/16;               /* retrato por defecto (móvil) */
+      border-radius: 28px;
+      overflow: hidden;
       background:
-        radial-gradient(1200px 700px at 50% 20%, rgba(255,255,255,.12), rgba(0,0,0,.18) 70%),
-        radial-gradient(600px 400px at 30% 30%, rgba(255,255,255,.05), transparent 70%),
-        radial-gradient(600px 400px at 70% 70%, rgba(255,255,255,.05), transparent 70%),
-        radial-gradient(circle at 50% 50%, var(--felt-1) 0%, var(--felt-2) 55%, var(--felt-3) 100%);
-      box-shadow: 0 20px 48px rgba(0,0,0,.6), inset 0 2px 6px rgba(255,255,255,.10),
-                  inset 0 -6px 18px rgba(0,0,0,.45);
+        radial-gradient(60% 70% at 50% 62%, rgba(0,0,0,.30), rgba(0,0,0,.62) 70%),
+        var(--table-img) center/cover no-repeat;
+      box-shadow: 0 24px 60px rgba(0,0,0,.55), inset 0 2px 0 rgba(255,255,255,.08);
     }
-    .table::before{
-      content:""; position:absolute; inset: calc(var(--pad) * -0.9);
-      border-radius: calc(var(--radius) + 30px);
-      background: linear-gradient(180deg, var(--wood-1), var(--wood-2) 45%, var(--wood-3) 70%, var(--wood-4));
-      box-shadow: 0 22px 50px rgba(0,0,0,.65), inset 0 2px 3px rgba(255,255,255,.22),
-                  inset 0 -3px 8px rgba(0,0,0,.55);
-      z-index:-1;
+    @media (min-aspect-ratio: 4/3){
+      .table{ aspect-ratio: 16/9; height: auto; max-width: 1100px; }
     }
 
     /* Logo */
     .logo{
-      position:absolute; left: clamp(14px,2vw,24px); top: clamp(10px,1.8vw,18px);
+      position:absolute; left: clamp(12px,2vw,22px); top: clamp(10px,1.8vw,18px);
       display:flex; align-items:center; gap:8px; padding: 6px 12px; border-radius:999px;
       background: radial-gradient(circle at 30% 20%, #ef4444 0%, #9a1b1b 70%);
       color:#fff; font-weight:800; letter-spacing:.4px; text-transform:uppercase;
       box-shadow: 0 6px 14px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.25);
+      z-index: 2;
     }
     .logo .chip{
       width: clamp(16px,2.6vw,22px); height: clamp(16px,2.6vw,22px); border-radius:50%;
@@ -61,39 +68,13 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,.6), inset 0 -2px 4px rgba(0,0,0,.35);
     }
 
-    /* Texto */
-    h1{ font-size: clamp(22px, 3.2vw, 34px); margin:0 0 16px; padding-left: clamp(0px, 8vw, 120px); }
-    h2{ font-size: clamp(18px, 2.4vw, 22px); margin: 6px 0; color:var(--ink-dim); }
-    h3{ font-size: clamp(16px, 2.1vw, 20px); margin: 10px 0; color:var(--ink-dim); }
-
-    /* Layout jugadores horizontal */
-    .grid-players{
-      display:grid; grid-template-columns: 1fr 1fr; gap: clamp(10px, 2vw, 22px);
-      align-items: start;
-    }
-    .grid-wrap{ overflow-x:auto; scrollbar-width: thin; }
-    .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .col{ display:flex; flex-direction:column; gap:12px; }
-
-    /* Botones */
-    .btn{
-      padding: 12px 16px; border-radius: 14px; border:1px solid rgba(255,255,255,.25);
-      background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
-      color:var(--ink); cursor:pointer;
-      box-shadow: 0 4px 10px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.15);
-      touch-action: manipulation;
-    }
-    .btn:hover{ filter:brightness(1.06); }
-    .btn:active{ transform: translateY(1px); }
-    .btn-secondary{ background: rgba(255,255,255,.12); }
-
-    /* Slots (mismo cuadro: elegir/mostrar) — fondo NO transparente */
+    /* Slots: mismo cuadro para elegir/mostrar. Fondo no transparente */
     .slot{
       width: var(--cardW);
       height: calc(var(--cardW) * 1.5);
       border-radius: 12px;
       border:1px dashed rgba(255,255,255,.46);
-      background: linear-gradient(180deg, #297e50, #1b6a43); /* sólido tipo tapete */
+      background: linear-gradient(180deg, #297e50, #1b6a43);
       color:#eaf3ed;
       display:grid; place-items:center; font-weight:800; cursor:pointer;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 6px 12px rgba(0,0,0,.25);
@@ -106,17 +87,80 @@
     .slot.filled span{ visibility:hidden; }
     .slot.filled img{ display:block; }
 
-    /* Board (en fila) + animación de reparto */
+    /* Manos a los extremos (ajusta top si tu fondo lo pide) */
+    .player-side{
+      position:absolute; top: 63%; transform: translateY(-50%);
+      display:flex; gap: 10px; align-items:center; z-index: 1;
+    }
+    .player-side.left  { left: 5%;  flex-direction: row; }
+    .player-side.right { right: 5%; flex-direction: row-reverse; }
+    @media (min-aspect-ratio: 4/3){
+      .player-side.left  { left: 7%; top: 60%; }
+      .player-side.right { right: 7%; top: 60%; }
+    }
+
+    /* Board centrado con animación de reparto */
+    .board-center{
+      position:absolute; left:50%; top:56%;
+      transform: translate(-50%, -50%);
+      display:flex; gap: 10px; align-items:center; z-index: 1;
+    }
     .card{ width:var(--cardW); height:calc(var(--cardW)*1.5); object-fit:contain;
            border-radius:10px; border:1px solid rgba(255,255,255,.35);
            box-shadow: 0 6px 12px rgba(0,0,0,.35); background:rgba(255,255,255,.08); }
-    .cards-row{ display:flex; gap:10px; align-items:center; }
-
     .board-card{ opacity:0; transform: translateY(-16px) rotateX(70deg); transform-origin: bottom center; }
     .board-card.deal{ animation: deal .55s ease forwards; }
-    @keyframes deal{
-      to{ opacity:1; transform: translateY(0) rotateX(0); }
+    @keyframes deal{ to{ opacity:1; transform: translateY(0) rotateX(0); } }
+    @media (min-aspect-ratio: 4/3){ .board-center{ top:54%; } }
+
+    /* Resultado */
+    .result-banner{
+      position:absolute; left:50%; top: 42%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.25);
+      padding: 6px 10px; border-radius: 999px;
+      font-weight: 800; letter-spacing:.2px; z-index: 1;
     }
+
+    /* HUD de botones (discreto) */
+    .hud{
+      position:absolute; left:50%; bottom:14px; transform: translateX(-50%);
+      display:flex; gap:8px; padding:6px 8px; border-radius:999px;
+      background: rgba(16,24,16,.25); backdrop-filter: blur(6px);
+      border:1px solid rgba(255,255,255,.18); z-index: 2;
+    }
+    .hud .btn{
+      padding: 8px 12px; font-size:.9rem; border-radius:999px;
+      background: transparent; color:#fff;
+      border:1px solid rgba(255,255,255,.28); cursor:pointer;
+    }
+    .hud .btn:hover{ filter:brightness(1.06); }
+    .hud .btn.primary{
+      background: rgba(34,197,94,.20);
+      border-color: rgba(34,197,94,.55);
+    }
+
+    /* ===== Tarjeta de resultados (simulación) ===== */
+    .stats{
+      margin-top:12px; padding:12px; border-radius:14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
+      border:1px solid rgba(255,255,255,.25);
+      box-shadow: 0 10px 24px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.12);
+      color:#fff;
+    }
+    .stats-title{ font-weight:800; letter-spacing:.3px; margin-bottom:8px; }
+    .stat-row{ display:flex; align-items:center; gap:8px; margin:8px 0; }
+    .badge{ min-width:86px; padding:6px 10px; border-radius:10px; font-weight:800; text-align:center; }
+    .badge.j1{ background: rgba(52,211,153,.22); border:1px solid var(--j1); }
+    .badge.j2{ background: rgba(248,113,113,.22); border:1px solid var(--j2); }
+    .badge.emp{ background: rgba(203,213,225,.24); border:1px solid var(--emp); color:#0f172a; }
+    .bar{ flex:1; height:12px; background: rgba(255,255,255,.12); border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,.18); }
+    .fill{ height:100%; width:0; border-radius:999px; transition: width .7s ease; }
+    .fill.j1{ background: var(--j1); }
+    .fill.j2{ background: var(--j2); }
+    .fill.emp{ background: var(--emp); }
+    .pct{ width:64px; text-align:right; font-weight:700; }
 
     /* ===== Modal selector ===== */
     .picker-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; z-index:10;
@@ -126,7 +170,7 @@
       width:min(1000px,100%); max-height:92vh; overflow:auto; border-radius:14px;
       background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
       border:1px solid rgba(255,255,255,.25); box-shadow:0 16px 40px rgba(0,0,0,.6);
-      padding:10px;
+      padding:10px; color:#fff;
     }
     .picker-header{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
     .picker-title{ font-weight:700; }
@@ -153,165 +197,55 @@
     .pick-btn[disabled]{ filter:grayscale(1) brightness(.7); cursor:not-allowed; opacity:.6; }
     .picker-actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; flex-wrap:wrap; }
 
-    /* ===== Tarjeta de resultados (simulación) ===== */
-    .stats{
-      margin-top:12px; padding:12px; border-radius:14px;
-      background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
-      border:1px solid rgba(255,255,255,.25);
-      box-shadow: 0 10px 24px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.12);
-    }
-    .stats-title{ font-weight:800; letter-spacing:.3px; margin-bottom:8px; }
-    .stat-row{ display:flex; align-items:center; gap:8px; margin:8px 0; }
-    .badge{ min-width:86px; padding:6px 10px; border-radius:10px; font-weight:800; text-align:center; }
-    .badge.j1{ background: rgba(52,211,153,.22); border:1px solid var(--j1); }
-    .badge.j2{ background: rgba(248,113,113,.22); border:1px solid var(--j2); }
-    .badge.emp{ background: rgba(203,213,225,.24); border:1px solid var(--emp); color:#0f172a; }
-    .bar{ flex:1; height:12px; background: rgba(255,255,255,.12); border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,.18); }
-    .fill{ height:100%; width:0; border-radius:999px; transition: width .7s ease; }
-    .fill.j1{ background: var(--j1); }
-    .fill.j2{ background: var(--j2); }
-    .fill.emp{ background: var(--emp); }
-    .pct{ width:64px; text-align:right; font-weight:700; }
+    /* Contenedor de resultados de simulación sobre la mesa */
+    #simu{ position:absolute; left:50%; bottom:68px; transform:translateX(-50%); width:min(720px, 92%); z-index: 1; }
   </style>
-  :root{
-  --table-img: url("assets/fondo-dealer-mobile.jpg");
-  --slotW: clamp(56px, 8.5vw, 96px);
-}
-
-/* Mesa con fondo del dealer (pensado para móvil, ajusta en desktop) */
-.table{
-  position: relative;
-  margin: 0 auto;
-  height: min(100vh, 880px);
-  aspect-ratio: 9/16;                   /* retrato por defecto */
-  border-radius: 28px;
-  overflow: hidden;
-  background:
-    radial-gradient(60% 70% at 50% 62%, rgba(0,0,0,.30), rgba(0,0,0,.62) 70%),
-    var(--table-img) center/cover no-repeat;
-  box-shadow: 0 24px 60px rgba(0,0,0,.55), inset 0 2px 0 rgba(255,255,255,.08);
-}
-
-/* Manos de jugadores a los costados */
-.player-side{
-  position:absolute; top: 63%; transform: translateY(-50%);
-  display:flex; gap: 10px; align-items:center;
-}
-.player-side.left  { left: 5%;  flex-direction: row; }
-.player-side.right { right: 5%; flex-direction: row-reverse; }
-
-/* Slots/cartas (reutiliza tu clase .slot; aquí solo aseguramos tamaño) */
-.slot{
-  width: var(--slotW);
-  height: calc(var(--slotW) * 1.5);
-}
-
-/* Board centrado */
-.board-center{
-  position:absolute; left:50%; top:56%;
-  transform: translate(-50%, -50%);
-  display:flex; gap: 10px; align-items:center;
-}
-.board-center .card{
-  width: var(--slotW);
-  height: calc(var(--slotW) * 1.5);
-}
-
-/* Resultado en una banderita sutil */
-.result-banner{
-  position:absolute; left:50%; top: 42%;
-  transform: translateX(-50%);
-  background: rgba(0,0,0,.35);
-  border:1px solid rgba(255,255,255,.25);
-  padding: 6px 10px; border-radius: 999px;
-  font-weight: 800; letter-spacing:.2px;
-}
-
-/* HUD de botones discreto */
-.hud{
-  position:absolute; left:50%; bottom:14px; transform: translateX(-50%);
-  display:flex; gap:8px; padding:6px 8px; border-radius:999px;
-  background: rgba(16,24,16,.25); backdrop-filter: blur(6px);
-  border:1px solid rgba(255,255,255,.18);
-}
-.hud .btn{
-  padding: 8px 12px; font-size:.9rem; border-radius:999px;
-  background: transparent; color:#fff;
-  border:1px solid rgba(255,255,255,.28);
-}
-.hud .btn.primary{
-  background: rgba(34,197,94,.20);
-  border-color: rgba(34,197,94,.55);
-}
-
-/* Desktop/landscape: mesa más ancha */
-@media (min-aspect-ratio: 4/3){
-  .table{ aspect-ratio: 16/9; height: auto; max-width: 1100px; }
-  .player-side.left  { left: 7%; top: 60%; }
-  .player-side.right { right: 7%; top: 60%; }
-  .board-center{ top: 54%; }
-}
-
 </head>
 <body>
   <div class="page">
-    
     <div class="table">
-  <!-- Logo si quieres mantenerlo -->
-  <div class="logo"><span class="chip"></span> Poker Juanito</div>
+      <!-- Logo -->
+      <div class="logo"><span class="chip"></span> Poker Juanito</div>
 
-  <!-- Manos a los extremos -->
-  <div class="player-side left">
-    <button class="slot" data-slot="j1c1" title="J1"><span>Elegir</span><img alt=""></button>
-    <button class="slot" data-slot="j1c2" title="J1"><span>Elegir</span><img alt=""></button>
-  </div>
-  <div class="player-side right">
-    <button class="slot" data-slot="j2c1" title="J2"><span>Elegir</span><img alt=""></button>
-    <button class="slot" data-slot="j2c2" title="J2"><span>Elegir</span><img alt=""></button>
-  </div>
+      <!-- Manos a los extremos -->
+      <div class="player-side left">
+        <button class="slot" data-slot="j1c1" title="J1"><span>Elegir</span><img alt=""></button>
+        <button class="slot" data-slot="j1c2" title="J1"><span>Elegir</span><img alt=""></button>
+      </div>
+      <div class="player-side right">
+        <button class="slot" data-slot="j2c1" title="J2"><span>Elegir</span><img alt=""></button>
+        <button class="slot" data-slot="j2c2" title="J2"><span>Elegir</span><img alt=""></button>
+      </div>
 
-  <!-- Board centrado -->
-  <div class="board-center">
-    <img id="board0" class="card board-card" alt="">
-    <img id="board1" class="card board-card" alt="">
-    <img id="board2" class="card board-card" alt="">
-    <img id="board3" class="card board-card" alt="">
-    <img id="board4" class="card board-card" alt="">
-  </div>
+      <!-- Board centrado -->
+      <div class="board-center">
+        <img id="board0" class="card board-card" alt="">
+        <img id="board1" class="card board-card" alt="">
+        <img id="board2" class="card board-card" alt="">
+        <img id="board3" class="card board-card" alt="">
+        <img id="board4" class="card board-card" alt="">
+      </div>
 
-  <!-- Resultado -->
-  <div id="resultado" class="result-banner"></div>
+      <!-- Resultado -->
+      <div id="resultado" class="result-banner"></div>
 
-  <!-- HUD de acciones (discreto) -->
-  <div class="hud">
-    <button class="btn primary" id="btnBoardEval">Repartir + Evaluar</button>
-    <button class="btn" id="btnSimular">Simular</button>
-    <button class="btn" id="btnSwap">Intercambiar</button>
-    <button class="btn" id="btnLimpiar">Limpiar</button>
-  </div>
+      <!-- HUD de acciones (discreto) -->
+      <div class="hud">
+        <button class="btn primary" id="btnBoardEval">Repartir + Evaluar</button>
+        <button class="btn" id="btnSimular">Simular</button>
+        <button class="btn" id="btnSwap">Intercambiar</button>
+        <button class="btn" id="btnLimpiar">Limpiar</button>
+      </div>
 
-  <!-- Inputs ocultos (no mover) -->
-  <input id="j1c1" type="hidden"><input id="j1c2" type="hidden">
-  <input id="j2c1" type="hidden"><input id="j2c2" type="hidden">
-
-  <!-- Contenedor de resultados de simulación (se queda fuera de la HUD) -->
-  <div id="simu" style="position:absolute; left:50%; bottom:68px; transform:translateX(-50%); width:min(720px, 92%);"></div>
-</div>
-
-      </section>
-
-      <div id="resultado" class="out" style="margin-top:8px;"></div>
-
-      <section class="row" style="margin-top: clamp(8px,2vw,12px);">
-        <label>Simular (p.e. 1000):</label>
-        <input id="sims" type="number" value="1000" min="1" />
-      </section>
-
+      <!-- Contenedor resultados de simulación -->
       <div id="simu"></div>
 
       <!-- Inputs ocultos -->
       <input id="j1c1" type="hidden"><input id="j1c2" type="hidden">
       <input id="j2c1" type="hidden"><input id="j2c2" type="hidden">
+
+      <!-- Nº de simulaciones (oculto; por defecto 1000) -->
+      <input id="sims" type="hidden" value="1000">
     </div>
   </div>
 
@@ -332,15 +266,15 @@
         </div>
         <div class="search">
           🔎 <input id="pickerSearch" type="text" placeholder="Buscar carta..." />
-          <button class="btn btn-secondary" id="btnClearSearch" type="button">Limpiar</button>
-          <button class="btn btn-secondary" id="btnClosePicker" type="button">Cerrar</button>
+          <button class="btn" id="btnClearSearch" type="button">Limpiar</button>
+          <button class="btn" id="btnClosePicker" type="button">Cerrar</button>
         </div>
       </div>
 
       <div class="picker-grid" id="pickerGrid"></div>
       <div class="picker-actions">
-        <button class="btn btn-secondary" id="btnClearSlot" type="button">Quitar carta</button>
-        <button class="btn" id="btnAcceptPicker" type="button">Aceptar</button>
+        <button class="btn" id="btnClearSlot" type="button">Quitar carta</button>
+        <button class="btn primary" id="btnAcceptPicker" type="button">Aceptar</button>
       </div>
     </div>
   </div>
@@ -350,7 +284,7 @@
     const valores = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
     const palos = ['C','D','P','T']; // C=♥, D=♦, P=♠, T=♣
     const cartas = []; for (const v of valores) for (const p of palos) cartas.push(v+p);
-    const png = (code) => `Cartas/${code}.png`;
+    const png = (code) => `Cartas/${code}.png`;   // Asegúrate de tener /Cartas/XX.png en tu repo
 
     // ---------- slots ----------
     document.querySelectorAll('.slot').forEach(btn=>{
@@ -382,7 +316,7 @@
       return res;
     }
 
-    /* ===== Evaluador Texas Hold'em ===== */
+    /* ===== Evaluador Texas Hold'em (7->5 mejor mano) ===== */
     const vA = (v) => v==='A'?14 : v==='K'?13 : v==='Q'?12 : v==='J'?11 : parseInt(v,10);
     const parse = (c)=>({r:vA(c.slice(0,-1)), s:c.slice(-1)});
     const uniqDesc = a => [...new Set(a)].sort((x,y)=>y-x);
@@ -418,7 +352,7 @@
       if (c>0) return {g:1,j1:h1.d,j2:h2.d}; if (c<0) return {g:2,j1:h1.d,j2:h2.d}; return {g:0,j1:h1.d,j2:h2.d};
     }
 
-    // ---------- acciones de UI ----------
+    // ---------- acciones ----------
     const j = (id)=>document.getElementById(id).value;
 
     // Intercambiar manos
@@ -434,14 +368,10 @@
       if (!validar([c1,c2,c3,c4])) return;
       const usadas=new Set([c1,c2,c3,c4]); const board=barajarBoard(usadas);
 
-      // setear imágenes y animar secuencialmente
       const imgs=[0,1,2,3,4].map(i=>document.getElementById('board'+i));
       imgs.forEach((img,i)=>{
-        img.classList.remove('deal'); // reset
-        void img.offsetWidth;          // reflow para reiniciar animación
-        img.src = png(board[i]);
-        img.style.animationDelay = (i*0.12)+'s';
-        img.classList.add('deal');
+        img.classList.remove('deal'); void img.offsetWidth;
+        img.src = png(board[i]); img.style.animationDelay = (i*0.12)+'s'; img.classList.add('deal');
       });
 
       const r=evaluar([[c1,c2],[c3,c4]], board);
@@ -479,8 +409,6 @@
         </div>`;
       const cont = document.getElementById('simu');
       cont.innerHTML = html;
-
-      // animar barras
       requestAnimationFrame(()=>{
         cont.querySelector('.fill.j1').style.width = p1+'%';
         cont.querySelector('.fill.j2').style.width = p2+'%';
@@ -495,7 +423,7 @@
       document.getElementById('resultado').textContent=''; document.getElementById('simu').innerHTML='';
     };
 
-    // ---------- picker (con filtro por palo — colores de símbolos) ----------
+    // ---------- picker (con filtro por palo; ♥♦ rojos, ♠♣ negros) ----------
     let currentSlot=null, tempChoice=null, suitFilter='';
     const $p = (id)=>document.getElementById(id);
     const normalize = s => (s||'').toUpperCase().replace(/\s+/g,'');
