@@ -200,6 +200,94 @@
 
     /* Contenedor de resultados de simulación sobre la mesa */
     #simu{ position:absolute; left:50%; bottom:68px; transform:translateX(-50%); width:min(720px, 92%); z-index: 1; }
+/* ====== MODO COMPACTO PARA MÓVIL ====== */
+@media (max-width: 480px) {
+
+  /* Cartas más pequeñas en móvil */
+  :root{
+    --cardW: 56px;          /* antes: clamp(56px, 8.8vw, 100px) */
+    --pad: 10px;
+  }
+
+  /* La mesa un poco más baja para ganar aire arriba/abajo */
+  .table{
+    height: min(92vh, 760px);
+  }
+
+  /* Logo un poco más discreto */
+  .logo{
+    transform: scale(.90);
+    transform-origin: left top;
+  }
+
+  /* Reacomodo de manos y board */
+  .player-side{ gap: 8px; top: 60%; }  /* antes ~63% */
+  .player-side.left{  left: 4%; }
+  .player-side.right{ right: 4%; }
+  .board-center{
+    top: 52%;                 /* sube el board */
+    gap: 6px;
+  }
+
+  /* Banner de resultado más compacto */
+  .result-banner{
+    top: 40%;
+    font-size: .95rem;
+    padding: 4px 8px;
+  }
+
+  /* La tarjeta de simulación SALE de la mesa (debajo) */
+  #simu{
+    position: static;
+    transform: none;
+    width: 100%;
+    margin: 10px auto 0;
+    padding-inline: 6px;
+  }
+  .stats{
+    padding: 10px;
+    border-radius: 12px;
+  }
+  .stat-row{ margin: 6px 0; gap: 6px; }
+  .bar{ height: 10px; }
+  .badge{ min-width: 84px; padding: 5px 8px; border-radius: 8px; }
+  .pct{ width: 56px; }
+
+  /* Botones debajo, en dos filas si no caben */
+  .hud{
+    position: static;
+    transform: none;
+    margin: 10px auto 0;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    max-width: 680px;
+  }
+  .hud .btn{
+    background: rgba(16,24,16,.25);
+    border:1px solid rgba(255,255,255,.20);
+    border-radius: 999px;
+    padding: 10px 14px;
+    flex: 1 1 calc(50% - 10px);   /* dos por fila */
+  }
+  .hud .btn.primary{
+    border-color: rgba(34,197,94,.5);
+    background: rgba(34,197,94,.18);
+  }
+}
+
+/* ====== TABLET/ESCRITORIO: un poco más de respiro general ====== */
+@media (min-width: 481px) and (max-width: 1024px){
+  :root{ --cardW: clamp(60px, 6.5vw, 88px); }
+  .board-center{ gap: 8px; top: 54%; }
+  .player-side{ top: 60%; }
+  #simu{ width: min(820px, 94%); }
+}
+
+    
   </style>
 </head>
 <body>
