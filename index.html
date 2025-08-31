@@ -10,13 +10,12 @@
 
   <style>
     :root{
-      /* Ruta del fondo (cámbiala si usas otro archivo) */
+      /* Ruta del fondo */
       --table-img: url("assets/fondo-dealer-mobile.png");
 
       /* Tamaños base */
       --cardW: clamp(56px, 8.8vw, 100px);           /* cartas en mesa */
       --pickW: clamp(38px, 10.7vw, 70px);           /* cartas en selector */
-      --radius: clamp(26px, 5vw, 52px);
       --pad: clamp(12px, 3.2vw, 26px);
 
       /* Colores */
@@ -35,12 +34,12 @@
 
     .page{ padding: clamp(8px,2.4vw,18px); }
 
-    /* Mesa (solo la escena, sin HUD ni simulación) */
+    /* ===== MESA (escena) ===== */
     .table{
       position: relative;
       margin: 0 auto;
       height: min(100vh, 880px);
-      aspect-ratio: 9/16;               /* retrato por defecto */
+      aspect-ratio: 9/16;               /* retrato */
       border-radius: 28px;
       overflow: hidden;
       background:
@@ -86,16 +85,16 @@
     .slot.filled span{ visibility:hidden; }
     .slot.filled img{ display:block; }
 
-    /* Manos a los extremos (ajusta top si tu fondo lo pide) */
+    /* Manos en los extremos inferiores (encima de fichas) */
     .player-side{
-      position:absolute; top: 61%; transform: translateY(-50%);
+      position:absolute; top: 71%; transform: translateY(-50%);
       display:flex; gap: 10px; align-items:center; z-index: 1;
     }
     .player-side.left  { left: 5%;  flex-direction: row; }
     .player-side.right { right: 5%; flex-direction: row-reverse; }
     @media (min-aspect-ratio: 4/3){
-      .player-side.left  { left: 7%; top: 60%; }
-      .player-side.right { right: 7%; top: 60%; }
+      .player-side.left  { left: 7%; top: 70%; }
+      .player-side.right { right: 7%; top: 70%; }
     }
 
     /* Board centrado con animación */
@@ -121,13 +120,14 @@
       font-weight: 800; letter-spacing:.2px; z-index: 1;
     }
 
-    /* ===== Contenedor inferior de controles (simulación + botones) ===== */
-    .controls{
+    /* ===== DOCK inferior (simulación arriba, botones abajo) ===== */
+    .dock{
+      position: sticky; bottom: 0; z-index: 5;  /* siempre visible al fondo */
       max-width: min(1100px, 96vw);
-      margin: 14px auto 0;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
+      margin: 10px auto 0;
+      display: grid; gap: 10px;
+      background: linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,0));
+      padding-top: 8px;
     }
 
     /* Tarjeta de resultados (simulación) */
@@ -138,6 +138,7 @@
       border:1px solid rgba(255,255,255,.25);
       box-shadow: 0 10px 24px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.12);
       color:#fff;
+      backdrop-filter: blur(6px);
     }
     .stats-title{ font-weight:800; letter-spacing:.3px; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
     .stat-row{ display:flex; align-items:center; gap:8px; margin:8px 0; }
@@ -152,15 +153,15 @@
     .fill.emp{ background: var(--emp); }
     .pct{ width:64px; text-align:right; font-weight:700; }
 
-    /* Botones (HUD) debajo y discretos */
+    /* Botones (abajo del dock) */
     .hud{
       display:flex; gap:10px; flex-wrap: wrap;
       justify-content: space-between;
-      background: rgba(16,24,16,.18);
-      border:1px solid rgba(255,255,255,.18);
+      background: rgba(16,24,16,.24);
+      border:1px solid rgba(255,255,255,.22);
       backdrop-filter: blur(6px);
       padding: 10px;
-      border-radius: 14px;
+      border-radius: 16px;
     }
     .hud .btn{
       padding: 10px 14px; font-size:.95rem; border-radius:999px;
@@ -215,26 +216,23 @@
       :root{ --cardW: 56px; --pad: 10px; }
       .table{ height: min(92vh, 760px); }
       .logo{ transform: scale(.90); transform-origin: left top; }
-      .player-side{ gap: 8px; top: 60%; }
+      .player-side{ gap: 8px; top: 70%; }
       .player-side.left{ left: 4%; } .player-side.right{ right: 4%; }
       .board-center{ top: 52%; gap: 6px; }
-      .result-banner{ top: 40%; font-size: .95rem; padding: 4px 8px; }
-      .controls{ gap: 10px; }
+      .result-banner{ top: 39%; font-size: .95rem; padding: 4px 8px; }
       .stats{ padding: 10px; border-radius: 12px; }
       .stat-row{ margin: 6px 0; gap: 6px; }
       .bar{ height: 10px; }
       .badge{ min-width: 84px; padding: 5px 8px; border-radius: 8px; }
       .pct{ width: 56px; }
-      .hud{ gap: 10px; }
       .hud .btn{ flex: 1 1 calc(50% - 10px); min-width: 46%; }
     }
 
-    /* Tablet/Escritorio: un poco más de respiro */
+    /* Tablet/Escritorio */
     @media (min-width: 481px) and (max-width: 1024px){
       :root{ --cardW: clamp(60px, 6.5vw, 88px); }
       .board-center{ gap: 8px; top: 54%; }
-      .player-side{ top: 60%; }
-      .controls{ max-width: min(1000px, 96vw); }
+      .player-side{ top: 69%; }
     }
   </style>
 </head>
@@ -266,15 +264,15 @@
       <!-- Resultado -->
       <div id="resultado" class="result-banner"></div>
 
-      <!-- Inputs ocultos para valores de slots -->
+      <!-- Inputs ocultos -->
       <input id="j1c1" type="hidden"><input id="j1c2" type="hidden">
       <input id="j2c1" type="hidden"><input id="j2c2" type="hidden">
       <input id="sims" type="hidden" value="1000">
     </div>
 
-    <!-- ===== CONTROLES INFERIORES (fuera de la mesa) ===== -->
-    <div class="controls">
-      <!-- Resultados de simulación -->
+    <!-- ===== DOCK inferior (simulación + botones) ===== -->
+    <div class="dock">
+      <!-- Simulación -->
       <div id="simu"></div>
 
       <!-- Botones -->
@@ -322,7 +320,7 @@
     const valores = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
     const palos = ['C','D','P','T']; // C=♥, D=♦, P=♠, T=♣
     const cartas = []; for (const v of valores) for (const p of palos) cartas.push(v+p);
-    const png = (code) => `Cartas/${code}.png`;   // Asegúrate de tener /Cartas/XX.png en tu repo
+    const png = (code) => `Cartas/${code}.png`;
 
     // ---------- slots ----------
     document.querySelectorAll('.slot').forEach(btn=>{
@@ -342,7 +340,6 @@
         img.src = ''; btn.classList.remove('filled'); label.textContent = 'Elegir';
       }
     }
-
     function validar(cuatro){
       if (cuatro.some(c => !c)) { alert('❌ Debes seleccionar las 4 cartas (2 por jugador).'); return false; }
       const s = new Set(cuatro); if (s.size !== cuatro.length) { alert('❌ No se pueden repetir cartas entre jugadores.'); return false; }
@@ -354,7 +351,7 @@
       return res;
     }
 
-    /* ===== Evaluador Hold'em (7->5 mejor mano) ===== */
+    /* ===== Evaluador Hold'em ===== */
     const vA = (v) => v==='A'?14 : v==='K'?13 : v==='Q'?12 : v==='J'?11 : parseInt(v,10);
     const parse = (c)=>({r:vA(c.slice(0,-1)), s:c.slice(-1)});
     const uniqDesc = a => [...new Set(a)].sort((x,y)=>y-x);
@@ -461,14 +458,14 @@
       document.getElementById('resultado').textContent=''; document.getElementById('simu').innerHTML='';
     };
 
-    // ---------- picker (con filtro por palo; ♥♦ rojos, ♠♣ negros) ----------
+    // ---------- picker ----------
     let currentSlot=null, tempChoice=null, suitFilter='';
     const $p = (id)=>document.getElementById(id);
     const normalize = s => (s||'').toUpperCase().replace(/\s+/g,'');
 
     function usedSet(except){
       const ids=['j1c1','j1c2','j2c1','j2c2'].filter(x=>x!==except), s=new Set();
-      ids.forEach(id=>{ const v=j(id); if (v) s.add(v); }); return s;
+      ids.forEach(id=>{ const v=document.getElementById(id).value; if (v) s.add(v); }); return s;
     }
     function renderPicker(){
       const grid=$p('pickerGrid'); grid.innerHTML='';
@@ -487,7 +484,7 @@
       });
     }
     function openPicker(slot){
-      currentSlot=slot; tempChoice=j(slot)||null;
+      currentSlot=slot; tempChoice=document.getElementById(slot).value||null;
       $p('pickerTitle').textContent=`Elige una carta (${slot.toUpperCase()})`;
       $p('pickerSearch').value=''; suitFilter='';
       document.querySelectorAll('.suit-btn').forEach(b=>b.classList.toggle('active', b.dataset.suit===''));
