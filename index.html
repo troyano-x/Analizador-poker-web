@@ -173,49 +173,131 @@
     .fill.emp{ background: var(--emp); }
     .pct{ width:64px; text-align:right; font-weight:700; }
   </style>
+  :root{
+  --table-img: url("assets/fondo-dealer-mobile.jpg");
+  --slotW: clamp(56px, 8.5vw, 96px);
+}
+
+/* Mesa con fondo del dealer (pensado para móvil, ajusta en desktop) */
+.table{
+  position: relative;
+  margin: 0 auto;
+  height: min(100vh, 880px);
+  aspect-ratio: 9/16;                   /* retrato por defecto */
+  border-radius: 28px;
+  overflow: hidden;
+  background:
+    radial-gradient(60% 70% at 50% 62%, rgba(0,0,0,.30), rgba(0,0,0,.62) 70%),
+    var(--table-img) center/cover no-repeat;
+  box-shadow: 0 24px 60px rgba(0,0,0,.55), inset 0 2px 0 rgba(255,255,255,.08);
+}
+
+/* Manos de jugadores a los costados */
+.player-side{
+  position:absolute; top: 63%; transform: translateY(-50%);
+  display:flex; gap: 10px; align-items:center;
+}
+.player-side.left  { left: 5%;  flex-direction: row; }
+.player-side.right { right: 5%; flex-direction: row-reverse; }
+
+/* Slots/cartas (reutiliza tu clase .slot; aquí solo aseguramos tamaño) */
+.slot{
+  width: var(--slotW);
+  height: calc(var(--slotW) * 1.5);
+}
+
+/* Board centrado */
+.board-center{
+  position:absolute; left:50%; top:56%;
+  transform: translate(-50%, -50%);
+  display:flex; gap: 10px; align-items:center;
+}
+.board-center .card{
+  width: var(--slotW);
+  height: calc(var(--slotW) * 1.5);
+}
+
+/* Resultado en una banderita sutil */
+.result-banner{
+  position:absolute; left:50%; top: 42%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,.35);
+  border:1px solid rgba(255,255,255,.25);
+  padding: 6px 10px; border-radius: 999px;
+  font-weight: 800; letter-spacing:.2px;
+}
+
+/* HUD de botones discreto */
+.hud{
+  position:absolute; left:50%; bottom:14px; transform: translateX(-50%);
+  display:flex; gap:8px; padding:6px 8px; border-radius:999px;
+  background: rgba(16,24,16,.25); backdrop-filter: blur(6px);
+  border:1px solid rgba(255,255,255,.18);
+}
+.hud .btn{
+  padding: 8px 12px; font-size:.9rem; border-radius:999px;
+  background: transparent; color:#fff;
+  border:1px solid rgba(255,255,255,.28);
+}
+.hud .btn.primary{
+  background: rgba(34,197,94,.20);
+  border-color: rgba(34,197,94,.55);
+}
+
+/* Desktop/landscape: mesa más ancha */
+@media (min-aspect-ratio: 4/3){
+  .table{ aspect-ratio: 16/9; height: auto; max-width: 1100px; }
+  .player-side.left  { left: 7%; top: 60%; }
+  .player-side.right { right: 7%; top: 60%; }
+  .board-center{ top: 54%; }
+}
+
 </head>
 <body>
   <div class="page">
+    
     <div class="table">
-      <div class="logo"><span class="chip"></span> Poker Juanito</div>
-      <h1>Analizador de Poker – Web</h1>
+  <!-- Logo si quieres mantenerlo -->
+  <div class="logo"><span class="chip"></span> Poker Juanito</div>
 
-      <div class="grid-wrap">
-        <section class="grid-players">
-          <div class="col">
-            <h2>Jugador 1</h2>
-            <div class="cards-row">
-              <button class="slot" data-slot="j1c1" title="Elegir carta J1-1"><span>Elegir</span><img alt=""></button>
-              <button class="slot" data-slot="j1c2" title="Elegir carta J1-2"><span>Elegir</span><img alt=""></button>
-            </div>
-          </div>
+  <!-- Manos a los extremos -->
+  <div class="player-side left">
+    <button class="slot" data-slot="j1c1" title="J1"><span>Elegir</span><img alt=""></button>
+    <button class="slot" data-slot="j1c2" title="J1"><span>Elegir</span><img alt=""></button>
+  </div>
+  <div class="player-side right">
+    <button class="slot" data-slot="j2c1" title="J2"><span>Elegir</span><img alt=""></button>
+    <button class="slot" data-slot="j2c2" title="J2"><span>Elegir</span><img alt=""></button>
+  </div>
 
-          <div class="col">
-            <h2>Jugador 2</h2>
-            <div class="cards-row">
-              <button class="slot" data-slot="j2c1" title="Elegir carta J2-1"><span>Elegir</span><img alt=""></button>
-              <button class="slot" data-slot="j2c2" title="Elegir carta J2-2"><span>Elegir</span><img alt=""></button>
-            </div>
-          </div>
-        </section>
-      </div>
+  <!-- Board centrado -->
+  <div class="board-center">
+    <img id="board0" class="card board-card" alt="">
+    <img id="board1" class="card board-card" alt="">
+    <img id="board2" class="card board-card" alt="">
+    <img id="board3" class="card board-card" alt="">
+    <img id="board4" class="card board-card" alt="">
+  </div>
 
-      <div class="row" style="margin: clamp(10px,2vw,18px) 0;">
-        <button class="btn" id="btnSwap">Intercambiar manos</button>
-        <button class="btn" id="btnBoardEval">Generar board + Evaluar</button>
-        <button class="btn" id="btnSimular">Simular probabilidades</button>
-        <button class="btn" id="btnLimpiar">Limpiar</button>
-      </div>
+  <!-- Resultado -->
+  <div id="resultado" class="result-banner"></div>
 
-      <section>
-        <h3>Board (Flop, Turn, River)</h3>
-        <div class="cards-row">
-          <img id="board0" class="card board-card" />
-          <img id="board1" class="card board-card" />
-          <img id="board2" class="card board-card" />
-          <img id="board3" class="card board-card" />
-          <img id="board4" class="card board-card" />
-        </div>
+  <!-- HUD de acciones (discreto) -->
+  <div class="hud">
+    <button class="btn primary" id="btnBoardEval">Repartir + Evaluar</button>
+    <button class="btn" id="btnSimular">Simular</button>
+    <button class="btn" id="btnSwap">Intercambiar</button>
+    <button class="btn" id="btnLimpiar">Limpiar</button>
+  </div>
+
+  <!-- Inputs ocultos (no mover) -->
+  <input id="j1c1" type="hidden"><input id="j1c2" type="hidden">
+  <input id="j2c1" type="hidden"><input id="j2c2" type="hidden">
+
+  <!-- Contenedor de resultados de simulación (se queda fuera de la HUD) -->
+  <div id="simu" style="position:absolute; left:50%; bottom:68px; transform:translateX(-50%); width:min(720px, 92%);"></div>
+</div>
+
       </section>
 
       <div id="resultado" class="out" style="margin-top:8px;"></div>
