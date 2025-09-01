@@ -19,10 +19,11 @@
       --pad: clamp(12px, 3.2vw, 26px);
 
       /* Colores */
-      --ink:#ffffff;     --ink-dim:#e8f3ed; --gold:#eacb7b;
+      --ink:#ffffff; --ink-dim:#e8f3ed; --gold:#eacb7b;
       --j1:#34d399; --j2:#f87171; --emp:#cbd5e1;
       --glass: rgba(16,24,16,.24);
       --stroke: rgba(255,255,255,.22);
+      --disabled: rgba(255,255,255,.45);
     }
 
     body{
@@ -67,7 +68,7 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,.6), inset 0 -2px 4px rgba(0,0,0,.35);
     }
 
-    /* Selector de modo (arriba, discreto) */
+    /* Selector de modo */
     .mode{
       position:absolute; right: clamp(10px,2vw,18px); top: clamp(10px,1.8vw,18px);
       display:flex; gap:6px; padding:6px; border-radius:999px;
@@ -81,7 +82,7 @@
     }
     .mode button.active{ border-color: var(--gold); background: rgba(234,203,123,.18); }
 
-    /* Slots de cartas (manos y preboard) */
+    /* Slots (manos y preboard) */
     .slot{
       width: var(--cardW);
       height: calc(var(--cardW) * 1.5);
@@ -100,8 +101,13 @@
     .slot.filled{ border-style: solid; border-color: rgba(255,255,255,.46); }
     .slot.filled span{ visibility:hidden; }
     .slot.filled img{ display:block; }
+    .slot.disabled{
+      opacity:.45; filter: grayscale(.7);
+      cursor:not-allowed; pointer-events: none;
+      border-color: var(--disabled);
+    }
 
-    /* Manos (encima de fichas) */
+    /* Manos */
     .player-side{
       position:absolute; top: 71%; transform: translateY(-50%);
       display:flex; gap: 10px; align-items:center; z-index: 1;
@@ -113,7 +119,7 @@
       .player-side.right { right: 7%; top: 70%; }
     }
 
-    /* Preboard helper row (solo visible en modos Turn/River) */
+    /* Preboard (visible en Turn/River) */
     .preboard{
       position:absolute; left:50%; top: 44%;
       transform: translate(-50%, -50%);
@@ -148,7 +154,7 @@
       font-weight: 800; letter-spacing:.2px; z-index: 1;
     }
 
-    /* ===== DOCK inferior (simulación arriba, botones abajo) ===== */
+    /* ===== DOCK inferior ===== */
     .dock{
       position: sticky; bottom: 0; z-index: 5;
       max-width: min(1100px, 96vw);
@@ -158,6 +164,7 @@
       padding-top: 8px;
     }
 
+    /* Tarjeta resultados */
     .stats{
       padding: 12px; border-radius: 14px;
       background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
@@ -176,57 +183,37 @@
     .fill.j1{ background: var(--j1); } .fill.j2{ background: var(--j2); } .fill.emp{ background: var(--emp); }
     .pct{ width:64px; text-align:right; font-weight:700; }
 
+    /* HUD (botones + selector simulaciones) */
     .hud{
       display:flex; gap:10px; flex-wrap: wrap;
-      justify-content: space-between;
-      background: var(--glass);
-      border:1px solid var(--stroke);
+      justify-content: space-between; align-items:center;
+      background: var(--glass); border:1px solid var(--stroke);
       backdrop-filter: blur(6px);
       padding: 10px; border-radius: 16px;
     }
+    .hud-left, .hud-right{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
     .hud .btn{
       padding: 10px 14px; font-size:.95rem; border-radius:999px;
       background: transparent; color:#fff;
       border:1px solid rgba(255,255,255,.28); cursor:pointer;
-      flex: 1 1 calc(25% - 10px); min-width: 140px;
+      min-width: 140px;
     }
     .hud .btn:hover{ filter:brightness(1.06); }
-    .hud .btn.primary{
-      background: rgba(34,197,94,.20);
-      border-color: rgba(34,197,94,.55);
-    }
+    .hud .btn.primary{ background: rgba(34,197,94,.20); border-color: rgba(34,197,94,.55); }
 
-    /* ===== Modal selector ===== */
-    .picker-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; z-index:10;
-                      align-items:center; justify-content:center; padding:10px; }
-    .picker-backdrop.open{ display:flex; }
-    .picker{
-      width:min(1000px,100%); max-height:92vh; overflow:auto; border-radius:14px;
-      background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
-      border:1px solid rgba(255,255,255,.25); box-shadow:0 16px 40px rgba(0,0,0,.6);
-      padding:10px; color:#fff;
+    .sim-ctrl{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .sim-ctrl .label{ opacity:.9; font-weight:700; }
+    .seg{ display:flex; gap:6px; }
+    .pill{
+      border:1px solid rgba(255,255,255,.28);
+      background: rgba(255,255,255,.08);
+      color:#fff; padding:6px 10px; border-radius:999px; cursor:pointer; font-weight:700;
     }
-    .picker-header{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
-    .picker-title{ font-weight:700; }
-    .picker-hint{ font-size:.9em; opacity:.9; }
-    .suits{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
-    .suit-btn{
-      border:1px solid rgba(255,255,255,.25); border-radius:999px; padding:6px 10px;
-      background: rgba(255,255,255,.1); cursor:pointer; font-weight:700;
+    .pill.active{ border-color: var(--gold); background: rgba(234,203,123,.18); }
+    .sim-input{
+      width: 92px; padding:6px 8px; border-radius:10px; border:1px solid rgba(255,255,255,.28);
+      background: rgba(255,255,255,.08); color:#fff; outline:none;
     }
-    .suit-btn.active{ outline:2px solid var(--gold); }
-    .suit-btn[data-suit="C"], .suit-btn[data-suit="D"]{ color:#ff4d4d; } /* ♥ ♦ rojo */
-    .suit-btn[data-suit="P"], .suit-btn[data-suit="T"]{ color:#151515; background:#f1f5f9; } /* ♠ ♣ negro */
-    .search{ display:flex; align-items:center; gap:6px; flex:1 1 240px;
-             border:1px solid rgba(255,255,255,.25); border-radius:12px; padding:8px 10px;
-             background: rgba(255,255,255,.1); color:var(--ink); }
-    .search input{ flex:1; min-width:120px; border:none; outline:none; background:transparent; color:var(--ink); }
-    .picker-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(var(--pickW), 1fr)); gap:6px; }
-    .pick-btn{ border:1px solid rgba(255,255,255,.35); border-radius:10px; background:rgba(255,255,255,.1);
-               padding:0; cursor:pointer; display:block; box-shadow:0 4px 10px rgba(0,0,0,.3); }
-    .pick-btn img{ width:100%; height:calc(var(--pickW) * 1.5); object-fit:contain; display:block; border-radius:10px; }
-    .pick-btn[disabled]{ filter:grayscale(1) brightness(.7); cursor:not-allowed; opacity:.6; }
-    .picker-actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; flex-wrap:wrap; }
 
     /* ====== Móvil ====== */
     @media (max-width: 480px) {
@@ -238,6 +225,8 @@
       .preboard{ top: 46%; gap: 6px; }
       .board-center{ top: 60%; gap: 6px; }
       .result-banner{ top: 40%; font-size: .95rem; padding: 4px 8px; }
+      .hud-left{ flex:1 1 100%; justify-content:space-between; }
+      .hud-right{ flex:1 1 100%; justify-content:space-between; }
       .hud .btn{ flex: 1 1 calc(50% - 10px); min-width: 46%; }
     }
 
@@ -271,7 +260,7 @@
         <button class="slot" data-slot="j2c2" title="J2"><span>Elegir</span><img alt=""></button>
       </div>
 
-      <!-- Preboard (solo para TURN / RIVER) -->
+      <!-- Preboard (solo Turn / River) -->
       <div class="preboard" id="preboard">
         <div class="pre-hint" id="preHint">Fija el flop (3):</div>
         <button class="slot small" data-slot="b0"><span>Flop 1</span><img alt=""></button>
@@ -301,14 +290,31 @@
       <input id="sims" type="hidden" value="1000">
     </div>
 
-    <!-- ===== DOCK inferior (simulación + botones) ===== -->
+    <!-- ===== DOCK inferior ===== -->
     <div class="dock">
+      <!-- Tarjeta de resultados -->
       <div id="simu"></div>
+
+      <!-- HUD: botones + selector simulaciones -->
       <div class="hud">
-        <button class="btn primary" id="btnBoardEval">Repartir / Completar</button>
-        <button class="btn" id="btnSimular">Simular</button>
-        <button class="btn" id="btnSwap">Intercambiar</button>
-        <button class="btn" id="btnLimpiar">Limpiar</button>
+        <div class="hud-left">
+          <button class="btn primary" id="btnBoardEval">Repartir / Completar</button>
+          <button class="btn" id="btnSimular">Simular</button>
+          <button class="btn" id="btnSwap">Intercambiar</button>
+          <button class="btn" id="btnLimpiar">Limpiar</button>
+        </div>
+
+        <div class="hud-right">
+          <div class="sim-ctrl">
+            <span class="label">Simulaciones:</span>
+            <div class="seg" id="simPills">
+              <button class="pill" data-sims="100">100</button>
+              <button class="pill active" data-sims="1000">1k</button>
+              <button class="pill" data-sims="10000">10k</button>
+            </div>
+            <input class="sim-input" type="number" id="simsInput" min="10" max="200000" step="10" value="1000" />
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -349,11 +355,23 @@
     const cartas = []; for (const v of valores) for (const p of palos) cartas.push(v+p);
     const png = (code) => `Cartas/${code}.png`;
 
-    // ---------- slots ----------
-    document.querySelectorAll('.slot').forEach(btn=>{
-      btn.addEventListener('click', ()=> openPicker(btn.dataset.slot));
+    /* ---- util DOM ---- */
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+    // Guardar texto por defecto de cada slot (para restaurar en limpiar)
+    $$('.slot').forEach(btn=>{
+      const span=btn.querySelector('span'); if(span) btn.dataset.default=span.textContent;
+      btn.addEventListener('click', ()=>{
+        if (btn.classList.contains('disabled')) return; // no abrir si deshabilitado
+        openPicker(btn.dataset.slot);
+      });
       const img = btn.querySelector('img');
-      if (img) img.addEventListener('click', (e)=>{ e.stopPropagation(); openPicker(btn.dataset.slot); });
+      if (img) img.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        if (btn.classList.contains('disabled')) return;
+        openPicker(btn.dataset.slot);
+      });
     });
 
     function setSlotValue(slot, code){
@@ -364,10 +382,15 @@
       const label = btn.querySelector('span');
       if (code){
         if (img) img.src = png(code);
-        btn.classList.add('filled'); if (label) label.textContent = code;
+        btn.classList.add('filled');
+        if (label) label.textContent = code;
       }else{
         if (img) img.src = '';
-        btn.classList.remove('filled'); if (label) label.textContent = (slot.startsWith('b') ? label.textContent : 'Elegir');
+        btn.classList.remove('filled');
+        if (label){
+          if (slot.startsWith('b')) label.textContent = btn.dataset.default || label.textContent;
+          else label.textContent = 'Elegir';
+        }
       }
     }
 
@@ -378,14 +401,20 @@
       return h;
     }
 
-    function usadasSet(extra=[]){
-      const ids=['j1c1','j1c2','j2c1','j2c2', ...extra];
+    function usadasSet(extraIds=[]){
+      const ids=['j1c1','j1c2','j2c1','j2c2', ...extraIds];
       const s=new Set();
       ids.forEach(id=>{ const v=document.getElementById(id)?.value; if (v) s.add(v); });
       return s;
     }
 
     // Preboard helpers
+    function applicablePreboardIds(mode){
+      if (mode==='turn')  return ['b0','b1','b2'];         // flop fijo
+      if (mode==='river') return ['b0','b1','b2','b3'];    // flop+turn fijos
+      return []; // full
+    }
+
     function getFixedBoardByMode(mode){
       const b0 = document.getElementById('b0').value;
       const b1 = document.getElementById('b1').value;
@@ -393,16 +422,13 @@
       const b3 = document.getElementById('b3').value;
       const b4 = document.getElementById('b4').value;
       if (mode==='turn'){
-        // requiere flop (3)
         if (!b0 || !b1 || !b2){ alert('⚠️ En modo "Desde Turn" debes fijar las 3 cartas del Flop.'); return null; }
         return [b0,b1,b2,null,null];
       }
       if (mode==='river'){
-        // requiere 4 primeras (flop+turn)
         if (!b0 || !b1 || !b2 || !b3){ alert('⚠️ En modo "Desde River" debes fijar Flop (3) y Turn (1).'); return null; }
         return [b0,b1,b2,b3,null];
       }
-      // full
       return [null,null,null,null,null];
     }
 
@@ -411,9 +437,7 @@
       const disp = cartas.filter(c => !usadas.has(c));
       const pickOne = () => { const k=Math.floor(Math.random()*disp.length); const v=disp[k]; disp.splice(k,1); return v; };
       const board = [...fixed];
-      for (let i=0;i<5;i++){
-        if (!board[i]) board[i]=pickOne();
-      }
+      for (let i=0;i<5;i++){ if (!board[i]) board[i]=pickOne(); }
       return board;
     }
 
@@ -454,40 +478,82 @@
     function evaluar(manos,board){
       const h1=best5of7([...manos[0],...board]), h2=best5of7([...manos[1],...board]);
       const c=cmp(h1,h2);
-      if (c>0) return {g:1,j1:h1.d,j2:h2.d}; if (c<0) return {g:2,j1:h2.d,j2:h1.d}; return {g:0,j1:h1.d,j2:h2.d};
+      if (c>0) return {g:1,j1:h1.d,j2:h2.d};
+      if (c<0) return {g:2,j1:h2.d,j2:h1.d};
+      return {g:0,j1:h1.d,j2:h2.d};
     }
 
-    // Utils
-    const j = (id)=>document.getElementById(id).value;
-
     // Intercambiar manos
-    document.getElementById('btnSwap').onclick = ()=>{
-      const a1=j('j1c1'), a2=j('j1c2'), b1=j('j2c1'), b2=j('j2c2');
+    $('#btnSwap').onclick = ()=>{
+      const a1=$('#j1c1').value, a2=$('#j1c2').value, b1=$('#j2c1').value, b2=$('#j2c2').value;
       setSlotValue('j1c1', b1); setSlotValue('j1c2', b2);
       setSlotValue('j2c1', a1); setSlotValue('j2c2', a2);
     };
 
     // Animar board
     function pintarBoard(board){
-      const imgs=[0,1,2,3,4].map(i=>document.getElementById('board'+i));
-      imgs.forEach((img,i)=>{
+      [0,1,2,3,4].forEach(i=>{
+        const img=$('#board'+i);
         img.classList.remove('deal'); void img.offsetWidth;
         img.src = png(board[i]); img.style.animationDelay = (i*0.12)+'s'; img.classList.add('deal');
       });
     }
 
-    // Generar según modo + evaluar
+    // ====== MODO ======
     let MODE = 'full'; // 'full' | 'turn' | 'river'
+    const preboard = $('#preboard'); const preHint  = $('#preHint');
 
-    document.getElementById('btnBoardEval').onclick = ()=>{
+    function setSlotDisabled(slotId, disabled){
+      const btn = document.querySelector(`.slot[data-slot="${slotId}"]`);
+      if (!btn) return;
+      btn.classList.toggle('disabled', !!disabled);
+      btn.setAttribute('aria-disabled', disabled ? 'true':'false');
+    }
+
+    function updatePreboardUIByMode(){
+      const ids = ['b0','b1','b2','b3','b4'];
+      // reset all to enabled
+      ids.forEach(id=>setSlotDisabled(id, false));
+
+      if (MODE==='full'){
+        preboard.classList.remove('show');
+        return;
+      }
+      preboard.classList.add('show');
+
+      if (MODE==='turn'){
+        preHint.textContent = 'Fija el Flop (3):';
+        setSlotDisabled('b3', true); // turn no aplica
+        setSlotDisabled('b4', true); // river no aplica
+      } else if (MODE==='river'){
+        preHint.textContent = 'Fija Flop (3) + Turn (1):';
+        setSlotDisabled('b4', true); // river se completa
+      }
+    }
+    updatePreboardUIByMode();
+
+    $('#modeBar').addEventListener('click', (e)=>{
+      const btn = e.target.closest('button[data-mode]'); if (!btn) return;
+      $$('#modeBar button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      MODE = btn.dataset.mode;
+      updatePreboardUIByMode();
+    });
+
+    // Generar según modo + evaluar
+    $('#btnBoardEval').onclick = ()=>{
       const manos = validarManos(); if (!manos) return;
-      // checar duplicados con preboard
+
+      // validar fijos requeridos
       const fixed = getFixedBoardByMode(MODE); if (fixed===null) return;
-      const usadas = usadasSet(['b0','b1','b2','b3','b4']);
-      // también impedir que preboard duplique entre sí:
-      const pb = ['b0','b1','b2','b3'].map(id=>document.getElementById(id).value).filter(Boolean);
+
+      // evitar duplicados dentro del preboard aplicable
+      const appIds = applicablePreboardIds(MODE);
+      const pb = appIds.map(id=>document.getElementById(id).value).filter(Boolean);
       if (new Set(pb).size !== pb.length){ alert('⚠️ Las cartas fijas del board no deben repetirse.'); return; }
-      // completar y evaluar
+
+      // barajar respetando cartas usadas (solo slots aplicables)
+      const usadas = usadasSet(appIds);
       const board = (MODE==='full')
         ? (function(){
             const disp = cartas.filter(c => !usadas.has(c));
@@ -499,21 +565,40 @@
 
       pintarBoard(board);
       const r=evaluar([[manos[0],manos[1]],[manos[2],manos[3]]], board);
-      document.getElementById('resultado').textContent =
+      $('#resultado').textContent =
         r.g===1?`🏆 Gana Jugador 1 (${r.j1})`: r.g===2?`🏆 Gana Jugador 2 (${r.j1})`:`🤝 Empate (${r.j1})`;
     };
 
+    // ===== Selector de simulaciones =====
+    const simsHidden = $('#sims');
+    const simsInput  = $('#simsInput');
+    const simPills   = $('#simPills');
+
+    function setSims(val){
+      const n = Math.max(10, Math.min(200000, parseInt(val||'1000',10) || 1000));
+      simsHidden.value = n;
+      simsInput.value = n;
+      $$('.pill', simPills).forEach(p=>p.classList.toggle('active', parseInt(p.dataset.sims,10)===n));
+    }
+
+    simPills.addEventListener('click', (e)=>{
+      const b = e.target.closest('.pill'); if (!b) return;
+      setSims(b.dataset.sims);
+    });
+    simsInput.addEventListener('change', ()=> setSims(simsInput.value));
+    setSims(1000); // default
+
     // Simulación respeta el modo
-    document.getElementById('btnSimular').onclick = ()=>{
+    $('#btnSimular').onclick = ()=>{
       const manos = validarManos(); if (!manos) return;
       const fb = getFixedBoardByMode(MODE); if (fb===null) return;
 
-      let n=parseInt((document.getElementById('sims').value||'1000'),10);
-      if (!Number.isFinite(n)||n<1) n=1000; n=Math.min(n,20000);
+      let n=parseInt(simsHidden.value,10); if (!Number.isFinite(n)||n<1) n=1000; n=Math.min(n,200000);
 
       let w1=0,w2=0,e=0;
       for (let k=0;k<n;k++){
-        const usadas = usadasSet(['b0','b1','b2','b3','b4']);
+        const appIds = applicablePreboardIds(MODE);
+        const usadas = usadasSet(appIds);
         const board = (MODE==='full')
           ? (function(){
               const disp = cartas.filter(c => !usadas.has(c));
@@ -521,7 +606,7 @@
               return out;
             })()
           : completarBoard(MODE, usadas);
-        if (!board) return; // por si en alguna iteración falla validación (no debería)
+        if (!board) return;
         const r=evaluar([[manos[0],manos[1]],[manos[2],manos[3]]], board);
         if (r.g===1) w1++; else if (r.g===2) w2++; else e++;
       }
@@ -529,23 +614,23 @@
       const p1=(w1/n*100), p2=(w2/n*100), pe=(e/n*100);
       const html = `
         <div class="stats">
-          <div class="stats-title">🧠 Resultado de ${n.toLocaleString()} simulaciones ${MODE==='full'?'(board completo)':
-            MODE==='turn'?'(desde Turn; Flop fijo)':'(desde River; Flop+Turn fijos)'}
+          <div class="stats-title">🧠 Resultado de ${n.toLocaleString()} simulaciones ${
+            MODE==='full'?'(board completo)': MODE==='turn'?'(desde Turn; Flop fijo)':'(desde River; Flop+Turn fijos)'}
           </div>
           <div class="stat-row">
             <div class="badge j1">Jugador 1</div>
             <div class="bar"><div class="fill j1" style="width:0%"></div></div>
-            <div class="pct" id="pct1">${p1.toFixed(2)}%</div>
+            <div class="pct">${p1.toFixed(2)}%</div>
           </div>
           <div class="stat-row">
             <div class="badge j2">Jugador 2</div>
             <div class="bar"><div class="fill j2" style="width:0%"></div></div>
-            <div class="pct" id="pct2">${p2.toFixed(2)}%</div>
+            <div class="pct">${p2.toFixed(2)}%</div>
           </div>
           <div class="stat-row">
             <div class="badge emp">Empates</div>
             <div class="bar"><div class="fill emp" style="width:0%"></div></div>
-            <div class="pct" id="pctE">${pe.toFixed(2)}%</div>
+            <div class="pct">${pe.toFixed(2)}%</div>
           </div>
         </div>`;
       const cont = document.getElementById('simu');
@@ -557,15 +642,15 @@
       });
     };
 
-    // Limpiar todo (incluye preboard y board mostrado)
-    document.getElementById('btnLimpiar').onclick = ()=>{
+    // Limpiar todo
+    $('#btnLimpiar').onclick = ()=>{
       ['j1c1','j1c2','j2c1','j2c2','b0','b1','b2','b3','b4'].forEach(id=>setSlotValue(id,''));
       ['board0','board1','board2','board3','board4'].forEach(id=>document.getElementById(id).src='');
       document.getElementById('resultado').textContent='';
       document.getElementById('simu').innerHTML='';
     };
 
-    // ---------- picker ----------
+    /* ---------- Picker ---------- */
     let currentSlot=null, tempChoice=null, suitFilter='';
     const $p = (id)=>document.getElementById(id);
     const normalize = s => (s||'').toUpperCase().replace(/\s+/g,'');
@@ -591,6 +676,7 @@
         grid.appendChild(b);
       });
     }
+
     function openPicker(slot){
       currentSlot=slot; tempChoice=$p(slot).value||null;
       $p('pickerTitle').textContent=`Elige una carta (${slot.toUpperCase()})`;
@@ -611,23 +697,6 @@
       const btn=e.target.closest('.suit-btn'); if (!btn) return;
       suitFilter = btn.dataset.suit; document.querySelectorAll('.suit-btn').forEach(b=>b.classList.toggle('active', b===btn));
       renderPicker();
-    });
-
-    // Cambiar modo (UI y requisitos)
-    const preboard = document.getElementById('preboard');
-    const preHint  = document.getElementById('preHint');
-    document.getElementById('modeBar').addEventListener('click', (e)=>{
-      const btn = e.target.closest('button[data-mode]'); if (!btn) return;
-      document.querySelectorAll('#modeBar button').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      MODE = btn.dataset.mode;
-      if (MODE==='full'){
-        preboard.classList.remove('show');
-      }else{
-        preboard.classList.add('show');
-        if (MODE==='turn'){ preHint.textContent = 'Fija el Flop (3):'; }
-        if (MODE==='river'){ preHint.textContent = 'Fija Flop (3) + Turn (1):'; }
-      }
     });
   </script>
 </body>
